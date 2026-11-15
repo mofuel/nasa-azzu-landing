@@ -73,7 +73,9 @@ function App() {
 </section>
 <div className="cave-passage" aria-hidden="true">
   <div className="cave-moon" />
-  <div className="cave-terrain" />
+  <div className="cave-terrain">
+    <div className="cave-astronaut" />
+  </div>
   <div className="cave-shadow" />
   <div className="lunar-eyelids" />
   <div className="cave-wall cave-wall-left" />

@@ -47,6 +47,7 @@ export function setupStory(root) {
     const caveShadow = cave.querySelector('.cave-shadow');
     const eyelids = cave.querySelector('.lunar-eyelids');
     const caveTerrain = cave.querySelector('.cave-terrain');
+    const astronaut = caveTerrain.querySelector('.cave-astronaut');
     const caveMoon = cave.querySelector('.cave-moon');
     const mars = hero.querySelector('#marte');
     const marsPlanet = mars.querySelector('.planet');
@@ -139,9 +140,11 @@ export function setupStory(root) {
       .set(eyelids, {autoAlpha: 1}, 2.21)
       .to(caveShadow, {autoAlpha: 0, duration: .055, ease: 'sine.out'}, 2.21)
       .fromTo(eyelids, {'--lid-cover': 1}, {'--lid-cover': 0, duration: .20, ease: 'sine.inOut'}, 2.21)
+      .set(astronaut, {'--walk-state': 'running'}, 2.30)
       .set(eyelids, {autoAlpha: 0}, 2.41)
       .set(caveMoon, {autoAlpha: 1}, 2.42)
       .to(caveTerrain, {autoAlpha: 0, scale: .88, duration: .17, ease: 'sine.inOut'}, 2.42)
+      .set(astronaut, {'--walk-state': 'paused'}, 2.59)
       .fromTo(caveMoon, {
         scale: () => Math.hypot(hero.clientWidth, hero.clientHeight) * 1.25 / caveMoon.offsetWidth
       }, {scale: .52, y: () => hero.clientHeight * .15, duration: .27, ease: 'sine.inOut'}, 2.42)

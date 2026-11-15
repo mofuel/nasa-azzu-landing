@@ -452,6 +452,51 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
   background: url(assets/lunar-terrain-hd.webp) center / cover no-repeat;
   transform-origin: 50% 68%;
 }
+.cave-astronaut {
+  position: absolute;
+  left: 30%;
+  bottom: 24%;
+  width: clamp(76px, 16svh, 156px);
+  aspect-ratio: 1;
+  animation: astronaut-crossing 16s linear -1.3s infinite var(--walk-state, paused);
+}
+.cave-astronaut::before {
+  content: "";
+  position: absolute;
+  inset: auto 23% 3% -22%;
+  height: 14%;
+  background: radial-gradient(ellipse at 78% 38%, #060b13d9, #0b152080 40%, transparent 72%);
+  transform: rotate(-13deg);
+}
+.cave-astronaut::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url(assets/astronaut-walk.png) 0 0 / 400% 200% no-repeat;
+  animation:
+    astronaut-steps 2s steps(1, end) infinite var(--walk-state, paused),
+    astronaut-lift 1s ease-in-out infinite var(--walk-state, paused);
+}
+@keyframes astronaut-lift {
+  0%, 100% { transform: translateY(0); }
+  42% { transform: translateY(-3%); }
+}
+@keyframes astronaut-crossing {
+  0% { transform: translateX(0); opacity: 0; }
+  8% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { transform: translateX(36vw); opacity: 0; }
+}
+@keyframes astronaut-steps {
+  0%     { background-position: 0 0; }
+  12.5%  { background-position: 33.333% 0; }
+  25%    { background-position: 66.667% 0; }
+  37.5%  { background-position: 100% 0; }
+  50%    { background-position: 0 100%; }
+  62.5%  { background-position: 33.333% 100%; }
+  75%    { background-position: 66.667% 100%; }
+  87.5%  { background-position: 100% 100%; }
+}
 .cave-moon {
   position: absolute;
   left: 50%;
