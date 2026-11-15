@@ -49,18 +49,42 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
 .earth::before { display: none; }
 .hero-stars {
   position: absolute;
-  inset: -9%;
-  background: url(assets/stars.svg) 50% 40% / 1050px auto,
-    radial-gradient(ellipse at 52% 58%, #080e19, #03060d 61%, #010207 86%);
+  inset: 0;
+  width: 100%;
+  height: 100svh;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 54% 41%, #090f1e 0%, #050a14 67%, #02050c 100%);
+  pointer-events: none;
+}
+.hero-stars::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url(assets/stars.svg) center / 1000px auto repeat;
+  opacity: .45;
+}
+.hero-stars canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-stars canvas { visibility: hidden; }
 }
 .hero-title {
   position: absolute;
   z-index: 1;
-  inset: 39% 4vw auto;
+  inset: 0 4vw;
+  height: 100svh;
+  display: grid;
+  align-content: center;
+  justify-items: center;
   text-align: center;
+  pointer-events: none;
 }
 .hero-title h1 {
-  margin: 14px auto 0;
+  margin: 0;
   color: #f1f9fa;
   font-size: clamp(48px, 9vw, 136px);
   line-height: .83;
@@ -71,42 +95,106 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
 .earth-globe {
   position: absolute;
   z-index: 2;
-  --earth-top: 103%;
+  --earth-top: 89%;
   top: var(--earth-top);
   left: 50%;
   translate: -50% 0;
   width: min(93vw, 122vh);
   aspect-ratio: 1;
+}
+.earth-globe::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   border-radius: 50%;
   background: #0b2432 url(assets/earth.jpg) center / cover no-repeat;
   box-shadow: 0 0 56px #57c9f340;
 }
 .hero-moon {
   position: absolute;
-  z-index: 4;
+  z-index: 3;
   top: 100%;
   left: 13%;
   width: clamp(42px, 6.8vw, 108px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: url(assets/orbital-moon.jpg) center / cover;
+  background: url(assets/orbital-moon-hd.webp) center / cover no-repeat;
   filter: brightness(.75) saturate(.65) drop-shadow(0 0 8px #80c8e544);
   transform: scale(.67);
   transform-origin: center;
   pointer-events: none;
 }
-.hero-ridge {
+.lunar-scan {
   position: absolute;
-  z-index: 3;
-  inset: 100% -10% auto;
-  height: 78%;
-  background: url(assets/orbital-ridge.webp) center / 100% 100% no-repeat;
+  inset: 0;
+  z-index: 4;
+  visibility: hidden;
   pointer-events: none;
+  color: #a7f1f4;
+}
+.lunar-scan-line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+}
+.lunar-scan-line path { vector-effect: non-scaling-stroke; stroke-width: 1.5px; }
+.scan-line-narrow { display: none; }
+.lunar-scan-point {
+  position: absolute;
+  top: 55%;
+  left: 43%;
+  width: 17px;
+  height: 17px;
+  translate: -50% -50%;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: radial-gradient(circle, currentColor 0 2px, transparent 3px);
+  box-shadow: 0 0 10px #86f5f877;
+}
+.lunar-scan-card {
+  position: absolute;
+  left: 58%;
+  top: 53%;
+  width: min(35vw, 410px);
+  background: #0e2837ed;
+  border: 1px solid #a7f1f488;
+  box-shadow: 0 12px 36px #02071170;
+  font: 13px/1.4 ui-monospace, monospace;
+}
+.lunar-scan-card h2 {
+  margin: 0;
+  padding: 11px 15px;
+  border-bottom: 1px solid #a7f1f488;
+  background: linear-gradient(100deg, #396974, #254b58);
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: .05em;
+  color: #eaffff;
+  text-transform: uppercase;
+}
+.lunar-scan-card h2 span { margin-right: 6px; color: #a7f1f4; }
+.lunar-scan-card dl { margin: 0; padding: 12px 15px; }
+.lunar-scan-card dl div { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+.lunar-scan-card dt { color: #b7d4e1; }
+.lunar-scan-card dd { margin: 0; text-align: right; }
+@media (max-width: 700px), (max-height: 550px) {
+  .scan-line-wide { display: none; }
+  .scan-line-narrow { display: block; }
+  .lunar-scan-card {
+    inset: auto 6% 61% auto;
+    width: min(88%, 320px);
+    font-size: 11px;
+  }
+  .lunar-scan-card h2, .lunar-scan-card dl { padding: 8px 11px; }
 }
 .lunar-surface {
   position: absolute;
   inset: 0;
-  background: linear-gradient(0deg, #080f1aaa, transparent 58%), url(assets/lunar-terrain.jpg) center / cover;
+  background: linear-gradient(0deg, #080f1aaa, transparent 58%), url(assets/lunar-terrain-hd.webp) center / cover;
 }
 .lunar-surface {
   z-index: 5;
@@ -118,14 +206,24 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
 @media (prefers-reduced-motion: reduce) {
   .earth { display: block; overflow: visible; padding-top: 100svh; }
   .earth > .hero-stars { inset: 0 0 auto; height: 100svh; }
-  .earth > .hero-title { top: 39svh; }
   .earth > .earth-globe { top: 65svh; }
-  .earth > .hero-moon, .earth > .hero-ridge { display: none; }
+  .earth > .hero-moon { display: none; }
   .earth > .caption { top: calc(100svh - 64px); bottom: auto; }
   .lunar-surface { position: relative; min-height: 100svh; }
 }
 .earth .caption { z-index: 6; align-items: end; }
 .caption a { color: var(--cyan); text-underline-offset: 5px; text-transform: uppercase; }
+.hud .brand,
+.hud nav a,
+.earth .caption {
+  color: #7895c1;
+}
+.hud nav a[aria-current],
+.hud nav a:hover,
+.earth .caption b,
+.earth .caption a {
+  color: #a1b9df;
+}
 .surface-transition {
   position: absolute;
   inset: 38% 7vw auto;
@@ -138,9 +236,27 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
 .atacama .occlusion { background-image: url(assets/lava.jpg); filter: brightness(.29) saturate(.55); }
 .field { background: #071c24e8; }
 .orbital:not(.earth) .planet { border-radius: 50%; right: auto; left: 50%; translate: -50% -50%; }
+.orbital.mars .planet { width: min(48vw, 60svh, 640px); top: 39%; }
+.mars-scan { visibility: visible; }
+.mars-scan .lunar-scan-point { left: 72.5%; top: 49%; }
+.mars-scan .lunar-scan-card {
+  inset: 12% 7% auto auto;
+  width: min(40vw, 410px);
+}
+@media (max-width: 700px) {
+  .orbital.mars .planet { width: min(76vw, 37svh); top: 44%; }
+  .mars-scan .lunar-scan-card { inset: 8% 6% auto auto; width: min(88%, 320px); }
+  .mars-scan .lunar-scan-point { top: 55%; }
+  .mars .intro h2 { font-size: clamp(36px, 9vw, 56px); margin-block: 10px; }
+  .mars .intro .button { margin-top: 12px; }
+  .orbital.mars { padding-bottom: 6svh; }
+}
+@media (min-width: 701px) and (max-height: 550px) {
+  .mars-scan .scan-line-wide { display: block; }
+  .mars-scan .scan-line-narrow { display: none; }
+}
 .orbital:not(.earth) .intro { align-self: end; z-index: 1; text-shadow: 0 2px 18px #000; }
 @media (max-width: 700px) {
-  .hero-title { inset-block-start: 36%; }
   .hero-title h1 { font-size: clamp(48px, 12vw, 76px); }
   .earth-globe { width: min(124vw, 95vh); }
   .viewfinder { inset: 7px; }
@@ -197,14 +313,6 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
 
 .lunar-intro .summary { margin-inline: auto; }
 .lunar-intro .button { margin-top: 14px; }
-.lunar-terrain {
-  position: absolute;
-  inset: auto 0 -41% 0;
-  height: 56%;
-  background: url(assets/foreground-rock.png) center bottom / 100% auto no-repeat;
-  filter: grayscale(1) sepia(.48) hue-rotate(157deg) saturate(1.3) brightness(.86);
-  pointer-events: none;
-}
 .lava .occlusion {
   inset: -18% 0 -24%;
   background-color: #272a2b;
@@ -237,28 +345,6 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
   line-height: 1.35;
 }
 
-.hero-stars i {
-  position: absolute;
-  width: 2px;
-  height: 2px;
-  border-radius: 50%;
-  background: #d4eeff;
-  opacity: .42;
-}
-.hero-stars i:nth-child(1) { left: 17%; top: 27%; }
-.hero-stars i:nth-child(2) { left: 67%; top: 15%; }
-.hero-stars i:nth-child(3) { left: 83%; top: 59%; }
-.hero-stars i:nth-child(4) { left: 30%; top: 73%; }
-
-@keyframes starlight {
-  0%, 100% { opacity: .28; }
-  48% { opacity: .63; }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .hero-stars i { animation: starlight 6s ease-in-out infinite; }
-  .hero-stars i:nth-child(even) { animation: starlight 8s -2s ease-in-out infinite; }
-}
-
 .surface-foreground {
   position: absolute;
   z-index: -1;
@@ -269,7 +355,6 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
 }
 .surface .occlusion { z-index: 0; }
 .surface-transition, .surface .field, .surface .art-credit { z-index: 1; }
-.lava .surface-foreground { filter: sepia(.34) saturate(1.1) brightness(1.06); }
 .atacama .surface-foreground { filter: sepia(.35); }
 @media (max-width: 700px) {
   .surface-foreground { inset-inline: -23%; height: 40%; }
@@ -279,7 +364,7 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
 
 
 
-.field-passage { display: none; }
+.cave-passage { display: none; }
 @media (prefers-reduced-motion: no-preference) {
   .earth > .sites {
     position: absolute;
@@ -287,11 +372,11 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
     z-index: 8;
     overflow: auto;
   }
-  .earth > .field-passage {
+  .earth > .cave-passage {
     display: block;
     position: absolute;
     inset: 0;
-    z-index: 9;
+    z-index: 7;
     overflow: hidden;
     pointer-events: none;
   }
@@ -303,46 +388,124 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
     position: absolute;
     inset: 0;
     z-index: 10;
+    background: transparent;
   }
+  .earth > .mars::before { display: none; }
 }
 
-.sand-far,
-.sand-near {
+.cave-wall,
+.cave-terrain,
+.cave-shadow {
   position: absolute;
-  inset: -20%;
-  visibility: hidden;
-  background: #ae7550 url(assets/atacama-sand-detail.webp) center / cover no-repeat;
+  inset: 0;
 }
-.sand-far {
-  background-position: 68% 32%;
-  mask-image: linear-gradient(155deg, transparent 18%, #000 62%);
+.cave-wall {
+  /* Match the source pixels shared by the panorama and each extended wall. */
+  --plate-height: max(124svh, 100vw * 2 / 3);
+  inset: auto;
+  top: calc(47.52% - var(--plate-height) / 2);
+  height: var(--plate-height);
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
 }
-.sand-near {
-  background-position: 36% 65%;
+.cave-wall-left {
+  left: calc(50% - var(--plate-height) * 1771 / 1024);
+  width: calc(var(--plate-height) * 1516 / 1024);
+  background-image: url(assets/lado-izquierdo.webp);
+  clip-path: polygon(0 0, 100% 0, 100% 3%, 97% 7%, 94% 10%, 89% 13%, 85% 15%, 82% 18%, 81% 23%, 79% 27%, 79% 30%, 77% 34%, 78% 39%, 79% 43%, 78% 46%, 80% 49%, 83% 52%, 83% 55%, 85% 59%, 87% 62%, 86% 66%, 85% 71%, 82% 74%, 80% 79%, 77% 84%, 77% 90%, 80% 95%, 82% 100%, 0 100%);
 }
-
-
+.cave-wall-right {
+  left: calc(50% + var(--plate-height) * 170 / 1024);
+  width: calc(var(--plate-height) * 1801 / 1024);
+  background-image: url(assets/lado-derecho.webp);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 17% 100%, 18% 94%, 20% 88%, 19% 83%, 20% 77%, 20% 73%, 19% 71%, 17% 70%, 16% 68%, 14% 68.5%, 12.5% 67.5%, 11% 65.5%, 10.5% 63.5%, 11.5% 61.5%, 12.5% 60%, 12% 58.5%, 13% 57%, 14.5% 56.5%, 14% 54.5%, 15.5% 53%, 16% 51%, 17.5% 50%, 18% 48%, 19.5% 47%, 21% 44%, 23% 40%, 21% 37%, 20% 34%, 21% 31%, 21% 28%, 20% 24%, 21% 22%, 18% 21%, 17% 17%, 17% 15%, 14% 14%, 13% 11%, 13% 9%, 11% 7%, 10% 6%, 8% 7%, 5% 6%, 2% 7%, 0 6%);
+}
+.cave-shadow { z-index: 1; background: #000; }
+.lunar-eyelids {
+  --lid-cover: 1;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+.lunar-eyelids::before,
+.lunar-eyelids::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  height: 51%;
+  background: #000;
+  transform: scaleY(var(--lid-cover));
+}
+.lunar-eyelids::before {
+  top: 0;
+  transform-origin: top;
+  border-radius: 0 0 46% 46% / 0 0 12% 12%;
+}
+.lunar-eyelids::after {
+  bottom: 0;
+  transform-origin: bottom;
+  border-radius: 46% 46% 0 0 / 12% 12% 0 0;
+}
+.cave-terrain {
+  inset: -10%;
+  background: url(assets/lunar-terrain-hd.webp) center / cover no-repeat;
+  transform-origin: 50% 68%;
+}
+.cave-moon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(86vw, 78svh);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: url(assets/orbital-moon-hd.webp) center / contain no-repeat;
+}
 
 .hero-flyby {
   display: none;
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 0;
   pointer-events: none;
 }
 .hero-flyby img {
   position: absolute;
   top: 0;
-  left: 0;
-  width: clamp(78px, 10vw, 154px);
+  left: 50%;
+  width: clamp(66px, 8vw, 124px);
   height: auto;
-  animation: satellite-flyby 20s 1.6s linear infinite both;
+  translate: -50% -50%;
+  --orbit-radius: min(40vw, 47svh);
+  animation: satellite-orbit 17s linear infinite;
 }
-@keyframes satellite-flyby {
-  0% { transform: translate(calc(-100% - 12px), 64svh) rotate(-14deg) scale(.85); }
-  9% { transform: translate(45vw, 54svh) rotate(-5deg) scale(1); }
-  19%, 100% { transform: translate(104vw, 34svh) rotate(8deg) scale(.82); }
+@keyframes satellite-orbit {
+  0%, 100% { transform: translate(calc(-1 * var(--orbit-radius)), -5svh) rotate(-25deg) scale(.82); }
+  16% { transform: translate(calc(-.56 * var(--orbit-radius)), -15svh) rotate(-12deg) scale(.96); }
+  29% { transform: translate(0, -18svh) rotate(0deg) scale(1); }
+  42% { transform: translate(calc(.56 * var(--orbit-radius)), -15svh) rotate(12deg) scale(.96); }
+  56% { transform: translate(calc(.83 * var(--orbit-radius)), 3svh) rotate(25deg) scale(.82); }
+  68% { transform: translate(calc(.38 * var(--orbit-radius)), 9svh) rotate(18deg) scale(.72); }
+  76% { transform: translate(0, 11svh) rotate(0deg) scale(.7); }
+  84% { transform: translate(calc(-.38 * var(--orbit-radius)), 9svh) rotate(-18deg) scale(.72); }
+  94% { transform: translate(calc(-.83 * var(--orbit-radius)), 3svh) rotate(-25deg) scale(.82); }
 }
 @media (prefers-reduced-motion: no-preference) {
   .hero-flyby { display: block; }
+}
+
+@keyframes hero-copy-enter {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes earth-enter {
+  from { transform: translateY(20px); opacity: .45; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .earth-globe::before { animation: earth-enter .65s ease-out; }
+  .hero-title h1 { animation: hero-copy-enter .65s ease-out both; }
+  .hero-title .hero-premise { animation: hero-copy-enter .55s .16s ease-out both; }
 }
