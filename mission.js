@@ -240,6 +240,13 @@ export function setupStory(root) {
   function followSurfaceLink(event) {
     if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     const link = event.target.closest('a[href^="#"]');
+    if (link?.hash === '#tierra') {
+      event.preventDefault();
+      history.pushState(null, '', link.hash);
+      jumpToScroll(0);
+      landingTimeline?.scrollTrigger.getTween()?.progress(1);
+      return;
+    }
     if (landingTimeline && sceneLabels[link?.hash]) {
       event.preventDefault();
       history.pushState(null, '', link.hash);

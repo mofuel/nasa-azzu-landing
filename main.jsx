@@ -282,6 +282,9 @@ function App() {
   <nav id="casos" aria-label="Casos de campo"><a href="#lava">Lava Beds</a><a href="#atacama">Atacama</a></nav>
   <a href="#tierra">Volver a la Tierra ↑</a>
 </footer>
+<a className="back-to-top" href="#tierra" aria-label="Volver al inicio" title="Volver al inicio">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 15 7-7 7 7" /></svg>
+</a>
     </div>
   );
 }

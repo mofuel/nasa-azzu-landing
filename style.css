@@ -623,6 +623,27 @@ footer {
   font: 12px ui-monospace, monospace;
 }
 footer nav { display: flex; gap: 16px; }
+.back-to-top {
+  position: fixed;
+  z-index: 20;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #a4f5ea66;
+  border-radius: 8px;
+  background: #081723eb;
+  color: var(--cyan);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px #02071166;
+  text-decoration: none;
+  transition: background-color .15s ease, color .15s ease;
+}
+.back-to-top:hover { background: #122d35; color: #efffff; }
 @media (max-width: 700px) {
   .atlas-variables { grid-template-columns: 1fr; }
 }
