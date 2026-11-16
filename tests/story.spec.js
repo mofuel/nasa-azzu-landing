@@ -7,31 +7,37 @@ test('orbital introduction stays centered and reverses with scroll', async ({pag
     if (response.status() >= 400) errors.push(response.url());
   });
   await page.goto('/');
+  await expect(page.locator('#loading-screen')).toHaveCount(0, {timeout: 12000});
   await page.evaluate(() => document.fonts.ready);
   const title = page.getByRole('heading', {level: 1, includeHidden: true});
   const planet = page.locator('.earth-globe');
   const hero = page.locator('#tierra');
   await expect(title).toBeVisible();
-  await expect(title).toBeInViewport({ratio: 1});
+  await expect(title).toBeInViewport({ratio: .99});
   const premise = page.locator('.hero-premise');
-  await expect(premise).toBeInViewport({ratio: 1});
+  const atlasLink = hero.getByRole('link', {name: 'Abrir el Atlas'});
+  await expect(atlasLink).toBeInViewport();
+  await expect(atlasLink).toHaveAttribute('href', 'https://nasa.azzu.tech/atlas/');
+  await expect(premise).toBeInViewport({ratio: .99});
   await expect(premise).toHaveCSS('opacity', '1');
   await expect(planet).toBeInViewport();
   const startingTitle = await title.boundingBox();
   const startingPlanet = await planet.boundingBox();
-  const width = page.viewportSize().width;
+  const heroBox = await hero.boundingBox();
+  const heroCenterX = heroBox.x + heroBox.width / 2;
   const startingPremise = await premise.boundingBox();
-  expect(startingPlanet.y).toBeGreaterThan(startingPremise.y + startingPremise.height);
-  const copyCenterY = (startingTitle.y + startingPremise.y + startingPremise.height) / 2;
+  const button = await atlasLink.boundingBox();
+  expect(startingPlanet.y).toBeGreaterThan(button.y + button.height);
+  const copyCenterY = (startingTitle.y + button.y + button.height) / 2;
   expect(Math.abs(copyCenterY - page.viewportSize().height / 2)).toBeLessThan(2);
-  for (const box of [startingTitle, startingPremise, startingPlanet]) {
-    expect(Math.abs(box.x + box.width / 2 - width / 2)).toBeLessThan(2);
+  for (const box of [startingTitle, startingPremise, startingPlanet, button]) {
+    expect(Math.abs(box.x + box.width / 2 - heroCenterX)).toBeLessThan(2);
   }
   await page.screenshot({path: testInfo.outputPath('hero.png')});
-  await page.evaluate(() => scrollTo(0, innerHeight * .46));
-  expect(Math.abs((await title.boundingBox()).y - startingTitle.y)).toBeLessThan(2);
-  await expect(page.locator('.hero-premise')).toBeInViewport({ratio: 1});
-  expect(Math.abs((await planet.boundingBox()).y - startingPlanet.y)).toBeLessThan(2);
+  await page.evaluate(() => scrollTo(0, innerHeight * .04));
+  await expect.poll(async () => (await planet.boundingBox()).y).toBeLessThan(startingPlanet.y - 2);
+  await expect.poll(async () => (await title.boundingBox()).y).toBeLessThan(startingTitle.y - 1);
+  await expect(premise).toBeInViewport({ratio: .99});
   await page.evaluate(() => scrollTo(0, innerHeight * 2.38));
   await expect.poll(async () => (await planet.boundingBox()).y).toBeLessThan(startingTitle.y);
   expect(Math.abs((await hero.boundingBox()).y)).toBeLessThan(2);
@@ -44,29 +50,103 @@ test('orbital introduction stays centered and reverses with scroll', async ({pag
   await page.evaluate(() => scrollTo(0, 0));
   await expect(title).toBeVisible();
   await expect.poll(async () => Math.abs((await planet.boundingBox()).y - startingPlanet.y)).toBeLessThan(2);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize().width);
   expect(errors).toEqual([]);
 });
 
-test('chapter links open both surface records and the comparison', async ({page}, testInfo) => {
-  await page.goto('/');
-  const navigation = page.getByRole('navigation', {name: 'Capítulos'});
-  for (const [chapter, label, id] of [['Luna', 'Explorar Lava Beds', 'lava'], ['Marte', 'Explorar Atacama', 'atacama']]) {
-    await navigation.getByRole('link', {name: chapter, exact: true}).click();
-    await expect(navigation.getByRole('link', {name: chapter, exact: true})).toHaveAttribute('aria-current', 'location');
+test('chapter links open both surfaces and the return to orbit reveals the Atlas', async ({page}, testInfo) => {
+  for (const [chapter, label, id, caption] of [
+    ['luna', 'Explorar Lava Beds', 'lava', '.field'],
+    ['marte', 'Descender a Marte', 'suelo-marciano', '.mars-ground-caption']
+  ]) {
+    await page.goto('/#' + chapter);
     await page.getByRole('link', {name: label}).click();
     await expect(page).toHaveURL(new RegExp('#' + id + '$'));
-    await expect(page.locator('#' + id + ' .field')).toHaveCSS('opacity', '1');
+    await expect(page.locator('#' + id + ' ' + caption)).toHaveCSS('opacity', '1');
     await expect(page.locator('#' + id + ' h2')).toBeFocused();
     await page.screenshot({path: testInfo.outputPath(id + '.png')});
   }
-  await navigation.getByRole('link', {name: 'Comparar'}).click();
-  await expect(page.locator('#comparar h2')).toBeInViewport();
+  await expect(page.getByText('Soy Curiosity.', {exact: true})).toBeInViewport();
+  await expect(page.getByRole('img', {name: /Modelo del rover Curiosity/})).toBeInViewport();
+  const phase = time => page.evaluate(time => scrollTo(0, innerHeight * 3.8 * time), time);
+  await expect(page.locator('#atacama')).toBeHidden();
+  const surfaceAt = y => page.evaluate(y => {
+    const hit = document.elementFromPoint(innerWidth * .5, innerHeight * y);
+    return hit?.matches('.mars-passage-rock') ? 'rock' : hit?.closest('.surface')?.id;
+  }, y);
+  await phase(3.76);
+  await expect.poll(() => surfaceAt(.75)).toBe('rock');
+  await expect.poll(() => surfaceAt(.25)).toBe('suelo-marciano');
+  await expect.poll(() => surfaceAt(.97)).toBe('rock');
+  await expect(page.locator('#suelo-marciano')).toHaveCSS('opacity', '1');
+  const rock = page.locator('.mars-passage-rock');
+  await page.screenshot({path: testInfo.outputPath('montesharp-to-rock.png')});
+  await phase(4);
+  await expect.poll(() => surfaceAt(.75)).toBe('atacama');
+  await expect.poll(() => surfaceAt(.25)).toBe('rock');
+  await expect(page.locator('#suelo-marciano')).toBeHidden();
+  await page.screenshot({path: testInfo.outputPath('mars-to-atacama.png')});
+  await phase(3.56);
+  await expect.poll(() => surfaceAt(.75)).toBe('suelo-marciano');
+  await expect(page.locator('#atacama')).toBeHidden();
+  await phase(4.16);
+  await expect(page.locator('#suelo-marciano')).toBeHidden();
+  await expect(rock).not.toBeInViewport();
+  await expect(page.getByRole('heading', {name: 'Desierto de Atacama'})).toBeVisible();
+  await expect(page.locator('#atacama .field')).toHaveCSS('opacity', '1');
+  await phase(4.63);
+  const orbit = page.locator('.atacama-orbit');
+  await expect(orbit).toHaveCSS('opacity', '1');
+  await expect(page.locator('#atacama .field')).toBeHidden();
+  await page.screenshot({path: testInfo.outputPath('atacama-orbit.png')});
+  const atlas = page.locator('#comparar');
+  await atlas.locator('.atlas-preview').scrollIntoViewIfNeeded();
+  await expect(atlas.getByRole('img')).toBeInViewport();
+  await expect(atlas.getByRole('link', {name: 'Abrir el Atlas'}))
+    .toHaveAttribute('href', 'https://nasa.azzu.tech/atlas/');
+  await expect(atlas.locator('.atlas-variables dt')).toHaveCount(3);
+});
+
+test('the NASA logo draws before revealing the landing', async ({page}, testInfo) => {
+  await page.addInitScript(() => {
+    document.addEventListener('animationstart', event => {
+      if (event.animationName !== 'dismiss-loading-screen') return;
+      event.target.getAnimations().find(animation => animation.animationName === event.animationName).pause();
+    });
+  });
+  await page.goto('/', {waitUntil: 'commit'});
+  const screen = page.locator('#loading-screen');
+  await expect(screen).toHaveCSS('background-color', 'rgb(0, 0, 0)');
+  const firstStroke = screen.locator('svg path').first();
+  await expect(firstStroke).toHaveAttribute('pathLength', '1', {timeout: 15000});
+  const spark = screen.locator('.logo-spark').first();
+  await expect(spark).toHaveAttribute('transform', /^translate\(/);
+  const initialSparkPosition = await spark.getAttribute('transform');
+  await expect(spark).not.toHaveAttribute('transform', initialSparkPosition);
+  await expect(firstStroke).toHaveCSS('stroke', 'rgb(255, 255, 255)');
+  const track = screen.locator('.loading-track');
+  await expect(track).toBeVisible();
+  expect(await track.evaluate(el => getComputedStyle(el, '::before').backgroundColor)).toBe('rgb(255, 255, 255)');
+  const initialTrackPosition = await track.boundingBox();
+  const initialLogoPosition = await screen.locator('svg').boundingBox();
+  const trackDuration = await track.evaluate(el => getComputedStyle(el, '::before').animationDuration);
+  await expect(firstStroke).toHaveCSS('animation-duration', `${trackDuration}, 0.42s`);
+  await expect(page.locator('#root')).toHaveAttribute('inert', '');
+  await expect(firstStroke).toHaveCSS('fill-opacity', '1', {timeout: 3500});
+  expect(await track.boundingBox()).toEqual(initialTrackPosition);
+  expect(await screen.locator('svg').boundingBox()).toEqual(initialLogoPosition);
+  await page.screenshot({path: testInfo.outputPath('nasa-loader.png'), animations: 'allow'});
+  await screen.evaluate(el => el.getAnimations().find(animation => animation.animationName === 'dismiss-loading-screen').finish());
+  await expect(screen).toHaveCount(0);
+  await expect(page.locator('html')).toHaveCSS('scrollbar-width', 'none');
+  await expect(page.getByRole('heading', {name: 'AZZU', exact: true})).toBeVisible();
+  await expect(page.getByRole('navigation', {name: 'Capítulos'})).toHaveCount(0);
 });
 
 test('reduced motion keeps the records visible without pinning', async ({page}) => {
   await page.emulateMedia({reducedMotion: 'reduce'});
   await page.goto('/#lava');
+  await expect(page.locator('#loading-screen')).toHaveCount(0);
   await expect(page.locator('#lava .field')).toBeVisible();
   await expect(page.locator('.pin-spacer')).toHaveCount(0);
 });
@@ -77,16 +157,16 @@ test('lunar rock covers the outgoing view, reveals Lava Beds and reverses', asyn
   const scene = page.locator('#lava');
   const rock = scene.locator('.occlusion');
   const field = scene.locator('.field');
-  const lunarSurface = page.locator('#luna');
+  const lunarSurface = page.locator('.hero-landing');
   const landscape = scene.locator('.landscape');
   const title = scene.locator('.surface-transition');
   const phase = time => page.evaluate(time => scrollTo(0, innerHeight * 3.8 * time), time);
 
   await phase(1.27);
-  await expect(lunarSurface.locator('.intro')).toHaveCSS('opacity', '1');
+  await expect(lunarSurface).toHaveCSS('opacity', '1');
   await expect(landscape).toHaveCSS('visibility', 'hidden');
 
-  await phase(1.51);
+  await phase(1.445);
   await expect(title).toHaveCSS('opacity', '1');
   await expect(field).toHaveCSS('visibility', 'hidden');
   const cover = await rock.boundingBox();
@@ -94,7 +174,7 @@ test('lunar rock covers the outgoing view, reveals Lava Beds and reverses', asyn
   expect(cover.y + cover.height * .81).toBeGreaterThan(page.viewportSize().height);
   await page.screenshot({path: testInfo.outputPath('lunar-occlusion.png')});
 
-  await phase(1.64);
+  await phase(1.57);
   await expect.poll(async () => {
     const box = await rock.boundingBox();
     return Math.round(box.y + box.height * .81);
@@ -104,13 +184,16 @@ test('lunar rock covers the outgoing view, reveals Lava Beds and reverses', asyn
 
   await phase(1.819);
   await expect.poll(() => field.evaluate(el => Number(getComputedStyle(el).opacity))).toBeGreaterThan(.98);
+  const card = await field.boundingBox();
+  expect(card.width).toBeLessThanOrEqual(282);
+  expect(card.x + card.width / 2).toBeGreaterThan(page.viewportSize().width / 2);
   await expect.poll(async () => {
     const box = await rock.boundingBox();
     return box.y + box.height;
   }).toBeLessThan(0);
   await phase(1.27);
   await expect(landscape).toHaveCSS('visibility', 'hidden');
-  await expect(lunarSurface.locator('.intro')).toHaveCSS('opacity', '1');
+  await expect(lunarSurface).toHaveCSS('opacity', '1');
   await expect(field).toHaveCSS('visibility', 'hidden');
 });
 
@@ -167,10 +250,23 @@ test('the Moon fills the viewport before revealing the lunar landscape', async (
   expect(approaching.width).toBeGreaterThan(crossing.width * 1.25);
   expect(approaching.x + approaching.width / 2).toBeLessThan(width * .48);
   expect((await earth.boundingBox()).x).toBeGreaterThan(earthAtCenter.x);
-  await phase(.88);
   const lunarScan = page.getByRole('complementary', {name: 'Ficha orbital · Luna'});
-  await expect(lunarScan.getByText('Lava Beds, California')).toBeInViewport({ratio: 1});
-  expect((await moon.boundingBox()).width).toBeGreaterThan(height * .82);
+  await phase(.829);
+  await expect(earth).toBeVisible();
+  await expect(lunarScan).toBeHidden();
+  await phase(.878);
+  await expect(earth).toBeHidden();
+  await expect(lunarScan.getByRole('heading', {name: '¿Dónde vivir en la Luna?'})).toBeInViewport({ratio: .99});
+  await expect(lunarScan.getByText('Lava Beds, California')).toBeInViewport({ratio: .99});
+  if (width > 700) {
+    const silhouetteRight = await moon.evaluate(el => {
+      const bounds = el.getBoundingClientRect();
+      const {a, b} = new DOMMatrix(getComputedStyle(el).transform);
+      return bounds.x + (bounds.width + el.offsetWidth * Math.hypot(a, b)) / 2;
+    });
+    const card = await lunarScan.locator('.lunar-scan-card').boundingBox();
+    expect(silhouetteRight).toBeLessThan(card.x - 15);
+  }
   await page.screenshot({path: testInfo.outputPath('lunar-scan.png')});
   await phase(.951);
   const close = await moon.boundingBox();
@@ -189,32 +285,34 @@ test('the Moon fills the viewport before revealing the lunar landscape', async (
   await expect(lunarScan).toBeHidden();
   await expect(moon).toHaveCSS('visibility', 'hidden');
   await expect.poll(async () => Number(await landing.evaluate(el => getComputedStyle(el).opacity))).toBeGreaterThan(.95);
-  const lunarHeading = page.getByRole('heading', {name: 'Descenso lunar'});
-  const navigation = page.getByRole('navigation', {name: 'Capítulos'});
   const arrival = await landing.boundingBox();
   expect(Math.abs(arrival.y)).toBeLessThan(2);
-  await phase(1.17);
-  await expect(lunarHeading).toBeInViewport();
-  await expect(landing.locator('.lunar-intro')).toHaveCSS('opacity', '1');
-  await expect(navigation.getByRole('link', {name: 'Luna', exact: true})).toHaveAttribute('aria-current', 'location');
+  await phase(1.06);
+  const location = landing.locator('.lunar-location');
+  await expect(location).toContainText('Luna');
+  await expect(location).toBeInViewport();
+  const locationBox = await location.boundingBox();
+  expect(locationBox.y).toBeLessThan(height * .25);
+  expect(locationBox.x).toBeGreaterThan(width * .5);
+  await expect(lunarScan).toBeHidden();
   expect(Math.abs((await landing.boundingBox()).y - arrival.y)).toBeLessThan(2);
   await page.screenshot({path: testInfo.outputPath('lunar-descent.png')});
+  await phase(1.23);
+  await expect.poll(async () => (await landing.boundingBox()).y).toBeLessThan(arrival.y - 20);
   await phase(.48);
   expect((await moon.boundingBox()).y).toBeGreaterThanOrEqual(height - 1);
 });
 
 
 
-test('the cave closes, reveals the lunar terrain and leads to Mars', async ({page}, testInfo) => {
+test('leaving Lava Beds follows the published Moon departure before Mars', async ({page}, testInfo) => {
   await page.goto('/');
   await expect(page.locator('.pin-spacer > #tierra')).toBeAttached();
-  const sites = page.locator('#casos');
   const cave = page.locator('.cave-passage');
   const leftWall = cave.locator('.cave-wall-left');
   const rightWall = cave.locator('.cave-wall-right');
   const lavaLandscape = page.locator('#lava .landscape');
-  const terrain = cave.locator('.cave-terrain');
-  const moon = cave.locator('.cave-moon');
+  const moon = page.locator('.departure-moon');
   const phase = time => page.evaluate(time => scrollTo(0, innerHeight * 3.8 * time), time);
 
   await phase(1.90);
@@ -229,48 +327,65 @@ test('the cave closes, reveals the lunar terrain and leads to Mars', async ({pag
   expect(Math.abs((await rightWall.boundingBox()).x - rightStart)).toBeLessThan(2);
   await page.screenshot({path: testInfo.outputPath('cave-aligned.png')});
   await phase(2.10);
+  await expect(moon).toBeVisible();
   await expect.poll(async () => (await leftWall.boundingBox()).x).toBeGreaterThan(leftStart + 30);
   expect((await rightWall.boundingBox()).x).toBeLessThan(rightStart - 30);
   for (const wall of [leftWall, rightWall]) {
     expect(await wall.evaluate(el => el.getBoundingClientRect().width / el.offsetWidth)).toBeCloseTo(1, 2);
   }
-  await expect.poll(() => lavaLandscape.evaluate(el => el.getBoundingClientRect().width / el.offsetWidth)).toBeLessThan(.96);
+  await expect.poll(() => lavaLandscape.evaluate(el => el.getBoundingClientRect().width / el.offsetWidth)).toBeLessThan(.98);
   await page.screenshot({path: testInfo.outputPath('cave-pullback.png')});
 
-  await phase(2.20);
-  await expect(cave.locator('.cave-shadow')).toHaveCSS('opacity', '1');
-  await expect(page.locator('#lava .landscape')).toBeHidden();
+  await phase(2.30);
+  await expect(moon).toBeVisible();
+  await expect.poll(() => lavaLandscape.evaluate(el => Number(getComputedStyle(el).opacity))).toBeLessThan(.65);
+  await expect(lavaLandscape).toBeVisible();
+  expect(await lavaLandscape.evaluate(el => {
+    const {top, right, bottom, left} = el.getBoundingClientRect();
+    return top <= 0 && right >= innerWidth && bottom >= innerHeight && left <= 0;
+  })).toBe(true);
+  await page.screenshot({path: testInfo.outputPath('cave-to-moon.png')});
 
-  await phase(2.31);
-  const eyelids = cave.locator('.lunar-eyelids');
-  await expect(eyelids).toBeVisible();
-  await expect.poll(() => eyelids.evaluate(el => Number(getComputedStyle(el).getPropertyValue('--lid-cover')))).toBeLessThan(.7);
-  await expect(leftWall).toBeHidden();
-  await expect(rightWall).toBeHidden();
-  await page.screenshot({path: testInfo.outputPath('lunar-eyes-opening.png')});
-
-  await phase(2.417);
-  await expect(terrain).toHaveCSS('opacity', '1');
-  await expect(cave.locator('.cave-shadow')).toBeHidden();
-  await page.screenshot({path: testInfo.outputPath('cave-lunar-reveal.png')});
+  await phase(2.425);
+  await expect(cave).toBeHidden();
+  await expect(lavaLandscape).toBeHidden();
+  await expect(page.locator('.hero-landing')).toBeHidden();
+  await expect(moon).toBeVisible();
+  await expect.poll(async () => (await moon.boundingBox()).width).toBeGreaterThan(page.viewportSize().width);
+  const departure = await moon.boundingBox();
+  await page.screenshot({path: testInfo.outputPath('lunar-departure.png')});
 
   await phase(2.65);
-  await expect(moon).toBeVisible();
-  await expect.poll(() => moon.evaluate(el => el.getBoundingClientRect().width / el.offsetWidth)).toBeLessThan(.8);
-  await expect(sites).toBeHidden();
+  await expect.poll(async () => (await moon.boundingBox()).width).toBeLessThan(departure.width * .65);
+  const distantMoon = await moon.boundingBox();
+  await phase(2.79);
+  await expect.poll(async () => {
+    const current = await moon.boundingBox();
+    return current.y + current.height / 2;
+  }).toBeLessThan(distantMoon.y + distantMoon.height / 2 - page.viewportSize().height * .10);
+  await expect.poll(async () => {
+    const current = await moon.boundingBox();
+    return current.x + current.width / 2;
+  }).toBeLessThan(departure.x + departure.width / 2 - page.viewportSize().width * .12);
 
   const marsPlanet = page.locator('#marte .planet');
   const marsPosition = async () => {
-    const {x, width} = await marsPlanet.boundingBox();
-    return {center: x + width / 2, width};
+    const {x, y, width, height} = await marsPlanet.boundingBox();
+    return {center: x + width / 2, centerY: y + height / 2, width};
   };
   const screenCenter = page.viewportSize().width / 2;
+  await phase(2.80);
+  await expect(marsPlanet).toBeInViewport({ratio: .1});
+  const enteringMars = await marsPosition();
+  expect(enteringMars.center).toBeGreaterThan(screenCenter * 1.5);
+  await page.screenshot({path: testInfo.outputPath('mars-entry.png')});
   await phase(2.90);
   await expect.poll(async () => Math.abs((await marsPosition()).center - screenCenter)).toBeLessThan(3);
   const centeredMars = await marsPosition();
+  expect(centeredMars.centerY).toBeGreaterThan(enteringMars.centerY + 20);
   await expect(moon).toBeHidden();
   await phase(3.01);
-  await expect(page.getByRole('heading', {name: /Huellas en el desierto/})).toBeInViewport();
+  await expect(page.getByRole('heading', {name: '¿Hubo vida en Marte?'})).toBeInViewport();
   await expect.poll(async () => (await marsPosition()).width).toBeGreaterThan(centeredMars.width * 1.5);
   expect((await marsPosition()).center).toBeGreaterThan(screenCenter);
   const marsScan = page.getByRole('complementary', {name: 'Ficha orbital · Marte'});
@@ -281,5 +396,5 @@ test('the cave closes, reveals the lunar terrain and leads to Mars', async ({pag
   await expect(page.locator('#lava .field')).toHaveCSS('opacity', '1');
 
   await page.goto('/#casos');
-  await expect(sites.getByRole('heading', {name: /De buscar refugio/})).toBeInViewport();
+  await expect(page.getByRole('navigation', {name: 'Casos de campo'})).toBeInViewport();
 });

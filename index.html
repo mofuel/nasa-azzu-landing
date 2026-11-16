@@ -3,12 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  html { scrollbar-width: none; }
+  html::-webkit-scrollbar { display: none; }
+  #loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: #000;
+  }
+</style>
+<link rel="preload" as="font" type="font/woff" href="./assets/despegue.woff" crossorigin>
 <link rel="icon" type="image/png" href="./assets/logo-nasa.png">
-<title>Análogos planetarios — Tierra, Luna y Marte</title>
-<meta name="description" content="Explora cómo los paisajes de la Tierra ayudan a investigar la Luna y Marte.">
+<title>AZZU · De la Tierra a la Luna y Marte</title>
+<meta name="description" content="Viaja de la Tierra a la Luna y Marte, conoce dos análogos terrestres y descubre cómo el Atlas de AZZU compara el relieve para ensayos de movilidad lunar.">
 </head>
 <body>
-<div id="root"></div>
+<div id="loading-screen" role="status" aria-label="Cargando">
+  <div class="loading-mark">
+    <div class="loading-logo"></div>
+    <div class="loading-track" aria-hidden="true"></div>
+  </div>
+</div>
+<div id="root" inert></div>
 <script type="module" src="/main.jsx"></script>
 </body>
 </html>

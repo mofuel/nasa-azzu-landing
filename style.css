@@ -1,14 +1,88 @@
+@font-face {
+  font-family: Despegue;
+  src: url(assets/despegue.woff) format("woff");
+  font-display: block;
+  unicode-range: U+0020, U+0041, U+0044-0045, U+0047, U+0049, U+004C-004E, U+0050, U+0052-0055, U+005A;
+}
 :root{color-scheme:dark;--ink:#edf1ea;--muted:#a4b9ba;--cyan:#a4f5ea;--line:#86b8b64a;--bg:#050c12;font:16px/1.55 Barlow,system-ui,sans-serif}
+:root {
+  --logo-draw-time: 2.8s;
+  --launch-reveal-at: 3.12s;
+  --launch-duration: 3.9s;
+  --logo-draw-ease: cubic-bezier(.45, 0, .55, 1);
+}
+#loading-screen { touch-action: none; }
+.loading-mark {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  visibility: hidden;
+}
+.loading-logo {
+  width: min(56vw, 235px);
+  aspect-ratio: 1;
+}
+#loading-screen svg { display: block; width: 100%; height: 100%; }
+#loading-screen path {
+  fill: #fff;
+  fill-opacity: 0;
+  stroke: #fff;
+  stroke-width: 58;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: .985;
+  animation: draw-nasa-logo var(--logo-draw-time) var(--logo-draw-ease) forwards,
+    fill-nasa-logo .42s ease-in-out calc(var(--logo-draw-time) - .42s) forwards;
+}
+.logo-spark {
+  fill: #fff;
+  pointer-events: none;
+}
+.logo-spark polygon { filter: drop-shadow(0 0 125px #fff); }
+.logo-spark-halo { opacity: .55; filter: blur(170px); }
+.logo-spark-trail { filter: drop-shadow(0 0 74px #fff); }
+.logo-spark-glint {
+  animation: flicker-logo-spark .7s ease-in-out infinite alternate;
+}
+.logo-spark-glint:nth-last-child(2) { animation-delay: -.25s; }
+.logo-spark-glint:last-child { animation-delay: -.55s; }
+@keyframes flicker-logo-spark {
+  from { opacity: .15; }
+  to { opacity: .85; }
+}
+.loading-track {
+  width: 84px;
+  height: 2px;
+  margin-top: -12px;
+  border-radius: 2px;
+  background: #ffffff30;
+}
+.is-drawing .loading-track::before {
+  content: "";
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #fff;
+  box-shadow: 0 0 8px #ffffff9c;
+  transform-origin: left;
+  animation: load-track var(--logo-draw-time) var(--logo-draw-ease) both;
+}
+#loading-screen.is-drawing { animation: dismiss-loading-screen var(--launch-duration) ease-in-out forwards; }
+#loading-screen.is-drawing .loading-mark {
+  visibility: visible;
+  animation: release-loading-mark .46s var(--launch-reveal-at) ease-in-out both;
+}
+@keyframes draw-nasa-logo { to { stroke-dashoffset: 0; } }
+@keyframes fill-nasa-logo { to { fill-opacity: 1; stroke-opacity: 0; } }
+@keyframes load-track { from { transform: scaleX(.015); } to { transform: scaleX(1); } }
+@keyframes release-loading-mark { to { opacity: 0; } }
+@keyframes dismiss-loading-screen { 80% { opacity: 1; } 100% { opacity: 0; } }
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);overflow-x:hidden}a{color:inherit}section[id]{scroll-margin-top:80px}
-.hud{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:18px 5vw;background:linear-gradient(#030a12e8,transparent);border-bottom:0}
-.brand{display:flex;gap:10px;align-items:center;font:700 11px/1.15 ui-monospace,monospace;letter-spacing:.12em;text-decoration:none}.brand span{font-size:24px;color:var(--cyan)}nav{display:flex;gap:clamp(12px,3vw,46px)}nav a{font-size:13px;color:var(--muted);text-decoration:none}nav a[aria-current],nav a:hover{color:var(--cyan)}a:focus-visible{outline:2px solid var(--cyan);outline-offset:5px}
+a:focus-visible{outline:2px solid var(--cyan);outline-offset:5px}
 .orbital{position:relative;min-height:100svh;isolation:isolate;overflow:hidden;display:grid;align-items:center;padding:110px 7vw 100px;background:radial-gradient(ellipse at 74% 45%,#0f2936,transparent 63%),#050c12}.orbital::before{content:"";position:absolute;inset:0;z-index:-2;background-image:url(assets/stars.svg);opacity:.8}.moon{background:radial-gradient(ellipse at 74% 45%,#232a30,transparent 68%),#080c10}.mars{background:radial-gradient(ellipse at 74% 45%,#39201c,transparent 68%),#110b0c}.planet{position:absolute;z-index:-1;width:min(68vw,850px);aspect-ratio:1;right:-3vw;top:50%;translate:0 -50%;pointer-events:none}.intro{max-width:650px}.label{color:var(--cyan);font:700 11px/1.4 ui-monospace,monospace;letter-spacing:.18em}.label span{display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;margin-right:7px;box-shadow:0 0 14px currentColor}
 h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;letter-spacing:-.075em;margin:24px 0}h1 em{color:#a8eee5;font-style:normal}h3{font-size:clamp(24px,3vw,40px);line-height:1.05;letter-spacing:-.045em}.summary{color:#c1d3d3;max-width:390px;font-size:clamp(15px,1.35vw,19px)}.button{display:inline-flex;gap:24px;align-items:center;margin-top:28px;padding:13px 17px;border:1px solid var(--cyan);text-decoration:none;font-size:14px;background:#08171bc9}.button:hover{background:var(--cyan);color:var(--bg)}
-.caption{position:absolute;bottom:24px;left:7vw;right:7vw;display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:12px;font:11px ui-monospace,monospace;color:var(--muted);letter-spacing:.1em}.caption b{color:var(--cyan)}
-.sites,.compare{padding:clamp(65px,10vw,145px) 7vw;background:#0c171d}.sites{display:grid;grid-template-columns:1fr 1fr;gap:6vw;align-items:center}.sites h2,.compare h2{font-size:clamp(42px,5.5vw,80px)}.site-links a{position:relative;display:block;padding:19px 32px 19px 0;border-top:1px solid var(--line);text-decoration:none}.site-links a:last-child{border-bottom:1px solid var(--line)}.site-links small{display:block;color:var(--cyan);font:11px ui-monospace,monospace}.site-links strong{font-size:clamp(21px,3vw,36px);letter-spacing:-.045em}.site-links span{position:absolute;right:8px;top:40%;color:var(--cyan)}.site-links a:hover strong{color:var(--cyan)}
-.surface{min-height:100svh;position:relative;display:grid;align-items:end;padding:120px 7vw 100px;isolation:isolate;overflow:hidden;background:#14151b}.landscape,.occlusion{position:absolute;inset:0;z-index:-2;background:var(--terrain) center / cover no-repeat}.landscape{inset:-12% 0;}.occlusion{z-index:-1;inset:-75% 0 -6%;clip-path:polygon(0 0,100% 0,100% 97%,90% 93%,79% 96%,68% 91%,55% 95%,43% 90%,31% 94%,20% 91%,11% 96%,0 100%);filter:brightness(.34);pointer-events:none}.lava{--terrain:url(assets/lava-beds.webp)}.atacama{--terrain:url(assets/atacama-panorama.webp)}.field{width:min(100%,520px);padding:clamp(22px,4vw,41px);background:#061018ed;border:1px solid var(--line);border-left:2px solid var(--cyan)}.field h2{font-size:clamp(42px,5vw,72px);margin:12px 0 18px}.field a,.comparison a{display:inline-block;margin-top:16px;color:var(--cyan);text-underline-offset:4px}.art-credit{position:absolute;right:7vw;bottom:26px;color:#fff;background:#050c12dc;padding:5px 8px;font:10px ui-monospace,monospace;letter-spacing:.1em}
-.comparison{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:40px}.comparison article{border:1px solid var(--line);padding:clamp(20px,4vw,45px)}.comparison h3{margin:14px 0}.comparison article>p:not(.label){color:var(--muted)}footer{padding:24px 7vw;display:flex;justify-content:space-between;gap:12px;color:var(--cyan);font:11px ui-monospace,monospace}
-@media(max-width:700px){.hud{padding:13px 4vw;gap:12px}.brand{font-size:9px;gap:4px}nav{gap:10px}nav a{font-size:11px}.orbital{align-items:end;padding-bottom:90px}.planet{width:100vw;top:38%;right:-17vw;opacity:.76}.intro{background:linear-gradient(90deg,#050c12c7,transparent);position:relative}.sites,.comparison{grid-template-columns:1fr}.surface{min-height:95svh}.caption{font-size:9px}}
+.surface{min-height:100svh;position:relative;display:grid;align-items:end;padding:120px 7vw 100px;isolation:isolate;overflow:hidden;background:#14151b}.landscape,.occlusion{position:absolute;inset:0;z-index:-2;background:var(--terrain) center / cover no-repeat}.landscape{inset:-12% 0;}.occlusion{z-index:-1;inset:-75% 0 -6%;clip-path:polygon(0 0,100% 0,100% 97%,90% 93%,79% 96%,68% 91%,55% 95%,43% 90%,31% 94%,20% 91%,11% 96%,0 100%);filter:brightness(.34);pointer-events:none}.lava{--terrain:url(assets/lava-beds.webp)}.atacama{--terrain:url(assets/atacama-panorama.webp)}.field{width:min(100%,520px);padding:clamp(22px,4vw,41px);background:#061018ed;border:1px solid var(--line);border-left:2px solid var(--cyan)}.field h2{font-size:clamp(42px,5vw,72px);margin:12px 0 18px}.field a{display:inline-block;margin-top:16px;color:var(--cyan);text-underline-offset:4px}
+@media(max-width:700px){.orbital{align-items:end;padding-bottom:90px}.planet{width:100vw;top:38%;right:-17vw;opacity:.76}.intro{background:linear-gradient(90deg,#050c12c7,transparent);position:relative}.surface{min-height:95svh}}
 @media(prefers-reduced-motion:reduce){.planet,.landscape{transform:none}.occlusion{display:none}}
 
 
@@ -86,12 +160,12 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
 .hero-title h1 {
   margin: 0;
   color: #f1f9fa;
-  font-size: clamp(48px, 9vw, 136px);
-  line-height: .83;
-  letter-spacing: -.042em;
+  font: 400 clamp(38px, 9vw, 136px)/.92 Despegue, Barlow, sans-serif;
+  letter-spacing: .105em;
   text-transform: uppercase;
   text-shadow: 0 0 40px #a8ebff25;
 }
+.hero-title h1 span { display: block; padding-inline-start: .105em; }
 .earth-globe {
   position: absolute;
   z-index: 2;
@@ -165,7 +239,7 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
   box-shadow: 0 12px 36px #02071170;
   font: 13px/1.4 ui-monospace, monospace;
 }
-.lunar-scan-card h2 {
+.lunar-scan-card > h2 {
   margin: 0;
   padding: 11px 15px;
   border-bottom: 1px solid #a7f1f488;
@@ -176,11 +250,33 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
   color: #eaffff;
   text-transform: uppercase;
 }
-.lunar-scan-card h2 span { margin-right: 6px; color: #a7f1f4; }
+.lunar-scan-card > h2 span { margin-right: 6px; color: #a7f1f4; }
+.lunar-scan-story {
+  position: absolute;
+  inset: auto 0 calc(100% + 18px);
+  color: #edf9fa;
+  font: 400 clamp(15px, 1.4vw, 20px)/1.35 Barlow, system-ui, sans-serif;
+  text-shadow: 0 2px 14px #020711;
+}
+.lunar-scan-story h2 {
+  margin: 0 0 9px;
+  font-size: clamp(30px, 3.3vw, 56px);
+  line-height: .98;
+  letter-spacing: -.045em;
+}
 .lunar-scan-card dl { margin: 0; padding: 12px 15px; }
 .lunar-scan-card dl div { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
 .lunar-scan-card dt { color: #b7d4e1; }
 .lunar-scan-card dd { margin: 0; text-align: right; }
+.lunar-scan-link {
+  display: block;
+  padding: 8px 15px;
+  border-top: 1px solid #a7f1f444;
+  color: #eaffff;
+  pointer-events: auto;
+  text-decoration: none;
+}
+.lunar-scan-link:hover { background: #a7f1f422; }
 @media (max-width: 700px), (max-height: 550px) {
   .scan-line-wide { display: none; }
   .scan-line-narrow { display: block; }
@@ -189,7 +285,11 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
     width: min(88%, 320px);
     font-size: 11px;
   }
-  .lunar-scan-card h2, .lunar-scan-card dl { padding: 8px 11px; }
+  .lunar-scan-card > h2, .lunar-scan-card dl { padding: 8px 11px; }
+  .lunar-scan-story { bottom: calc(100% + 13px); }
+}
+@media (min-width: 701px) and (max-height: 550px) {
+  .lunar-scan-story { inset: 0 calc(100% + 24px) auto auto; width: min(40vw, 390px); }
 }
 .lunar-surface {
   position: absolute;
@@ -203,26 +303,39 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
   padding: 64px 7vw;
   overflow: hidden;
 }
+.lunar-location {
+  position: absolute;
+  right: 7vw;
+  top: 9svh;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px;
+  border-right: 1px solid #b8f8f9a0;
+  background: #07111bc9;
+  color: #e4f7fa;
+  text-transform: uppercase;
+}
+.lunar-location span {
+  display: inline;
+  width: auto;
+  height: auto;
+  background: none;
+  box-shadow: none;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1;
+}
 @media (prefers-reduced-motion: reduce) {
   .earth { display: block; overflow: visible; padding-top: 100svh; }
   .earth > .hero-stars { inset: 0 0 auto; height: 100svh; }
   .earth > .earth-globe { top: 65svh; }
   .earth > .hero-moon { display: none; }
-  .earth > .caption { top: calc(100svh - 64px); bottom: auto; }
   .lunar-surface { position: relative; min-height: 100svh; }
-}
-.earth .caption { z-index: 6; align-items: end; }
-.caption a { color: var(--cyan); text-underline-offset: 5px; text-transform: uppercase; }
-.hud .brand,
-.hud nav a,
-.earth .caption {
-  color: #7895c1;
-}
-.hud nav a[aria-current],
-.hud nav a:hover,
-.earth .caption b,
-.earth .caption a {
-  color: #a1b9df;
+  #luna { position: relative; visibility: visible; padding: 56px 7vw 24px; }
+  #luna .lunar-scan-line, #luna .lunar-scan-point { display: none; }
+  #luna .lunar-scan-card { position: relative; inset: auto; margin-inline: auto; width: min(100%, 440px); }
+  #luna .lunar-scan-story { position: static; padding: 18px 15px; }
 }
 .surface-transition {
   position: absolute;
@@ -233,10 +346,10 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
   font-weight: 700;
   text-transform: uppercase;
 }
-.atacama .occlusion { background-image: url(assets/lava.jpg); filter: brightness(.29) saturate(.55); }
 .field { background: #071c24e8; }
 .orbital:not(.earth) .planet { border-radius: 50%; right: auto; left: 50%; translate: -50% -50%; }
 .orbital.mars .planet { width: min(48vw, 60svh, 640px); top: 39%; }
+.mars .intro h2 { font-size: clamp(40px, 5.4vw, 82px); }
 .mars-scan { visibility: visible; }
 .mars-scan .lunar-scan-point { left: 72.5%; top: 49%; }
 .mars-scan .lunar-scan-card {
@@ -257,7 +370,7 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
 }
 .orbital:not(.earth) .intro { align-self: end; z-index: 1; text-shadow: 0 2px 18px #000; }
 @media (max-width: 700px) {
-  .hero-title h1 { font-size: clamp(48px, 12vw, 76px); }
+  .hero-title h1 { font-size: clamp(28px, 13vw, 83px); }
   .earth-globe { width: min(124vw, 95vh); }
   .viewfinder { inset: 7px; }
   .viewfinder::after { width: 3px; }
@@ -268,52 +381,7 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
 }
 
 
-.sites {
-  min-height: 80svh;
-  position: relative;
-  isolation: isolate;
-  background: url(assets/atacama-panorama.webp) center / cover no-repeat;
-}
-.sites::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(90deg, #06101ad9, #08141b80 58%, #08141b19);
-  opacity: var(--field-shade, 1);
-  pointer-events: none;
-}
-.sites .summary { margin-top: 24px; }
-.site-links {
-  padding-inline: clamp(16px, 3vw, 36px);
-  background: #071c24d9;
-  border: 1px solid var(--line);
-}
-.site-links a:first-child { border-top: 0; }
-.site-links a:last-child { border-bottom: 0; }
-@media (max-width: 700px) {
-  .hero-title h1 { font-size: clamp(35px, 12vw, 76px); }
-  .sites { gap: 30px; }
-}
-
-.lunar-surface .lunar-intro {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  background: none;
-  margin-top: -20px;
-}
-.lunar-intro h2 {
-  font-size: clamp(52px, 8vw, 124px);
-  text-transform: uppercase;
-  line-height: .83;
-  margin: 10px 0;
-}
-
-
-.lunar-intro .summary { margin-inline: auto; }
-.lunar-intro .button { margin-top: 14px; }
-.lava .occlusion {
+.lava .occlusion, .mars-passage-rock {
   inset: -18% 0 -24%;
   background-color: #272a2b;
   background-image: url(assets/lava-wall.webp);
@@ -321,8 +389,28 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
   clip-path: polygon(0 4%, 7% 2%, 16% 4%, 24% 1%, 36% 4%, 50% 2%, 65% 4%, 73% 1%, 85% 3%, 100% 2%, 100% 100%, 94% 98%, 91% 99%, 88% 97%, 85% 97.5%, 82% 95%, 79% 94.5%, 77% 92%, 74% 91%, 70% 86%, 67% 87%, 65% 84.5%, 62% 83%, 59% 84%, 56% 82%, 53% 81%, 50% 82.2%, 48% 81.8%, 45% 84%, 43% 83.5%, 40% 86%, 37% 86.5%, 34% 88%, 31% 92%, 28% 91.5%, 25% 95%, 21% 96%, 18% 95.7%, 13% 98%, 8% 97.5%, 5% 99%, 0 100%);
   filter: none;
 }
-.lava .surface-transition { font-size: clamp(45px, 6.8vw, 110px); }
-.lava .field { justify-self: center; }
+.departure-moon, .mars-passage-rock { display: none; }
+.lava .surface-transition { font-size: clamp(34px, 4.8vw, 78px); }
+.lava .field {
+  position: relative;
+  justify-self: end;
+  width: min(85%, 344px);
+  padding: 19px 23px;
+}
+.lava .field h2 { margin: 6px 0 8px; font-size: clamp(29px, 3vw, 45px); }
+.lava .field p:not(.label), .lava .field a { font-size: 15px; line-height: 1.5; }
+.lava .field a { margin-top: 10px; }
+.lava .field::before {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  width: clamp(25px, 7vw, 110px);
+  height: 12px;
+  content: "";
+  background: #c8fff7;
+  clip-path: polygon(0 50%, 12px 0, 12px 43%, 100% 43%, 100% 57%, 12px 57%, 12px 100%);
+  filter: drop-shadow(0 0 4px #050a12);
+}
 @media (prefers-reduced-motion: no-preference) {
   .earth > .lava {
     position: absolute;
@@ -332,6 +420,7 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
     pointer-events: none;
   }
   .earth > .lava .field { pointer-events: auto; }
+  .lava .landscape { inset-inline: -10%; }
 }
 
 
@@ -345,6 +434,115 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
   line-height: 1.35;
 }
 
+.atlas-link {
+  --outline: #a4f5ea;
+  --face: #122d35;
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 52px;
+  margin-top: 20px;
+  padding: 6px 7px 6px 22px;
+  color: #eefcfc;
+  font: 700 12px/1.2 ui-monospace, monospace;
+  letter-spacing: .055em;
+  text-decoration: none;
+  pointer-events: auto;
+}
+.atlas-link::before, .atlas-link::after {
+  position: absolute;
+  z-index: -1;
+  content: "";
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+}
+.atlas-link::before { inset: 0; background: linear-gradient(115deg, var(--outline), #3d6270 68%, var(--outline)); }
+.atlas-link::after { inset: 1px; background: linear-gradient(115deg, var(--face), #081723 76%); }
+.atlas-link span:last-child {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid #a4f5ea40;
+  color: var(--cyan);
+  font-size: 19px;
+}
+.atlas-link:hover, .atlas-link:focus-visible { --outline: #efffff; --face: #234e56; }
+
+.atacama-orbit, .atlas-scene { background: url(assets/stars.svg) center top / 1000px auto repeat, #050a15; }
+.atacama-orbit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: none;
+  place-items: center;
+  pointer-events: none;
+}
+.atacama-orbit img {
+  width: min(72vw, 700px);
+  height: auto;
+  border-radius: 50%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .atacama-orbit { display: grid; visibility: hidden; }
+}
+
+.atlas-scene {
+  position: relative;
+  padding: clamp(23px, 4.6vh, 48px) 7vw 80px;
+  overflow: hidden;
+}
+.atlas-intro, .atlas-method { width: min(100%, 1090px); margin-inline: auto; }
+.atlas-intro { text-align: center; }
+.atlas-intro h2 {
+  margin: 0;
+  font-size: clamp(40px, 6.5vw, 94px);
+  letter-spacing: -.055em;
+}
+.atlas-intro p {
+  max-width: 50ch;
+  margin: 20px auto 0;
+  color: #cedce5;
+  font-size: clamp(16px, 1.5vw, 20px);
+}
+.atlas-preview {
+  position: relative;
+  width: min(100%, 1090px);
+  margin: clamp(20px, 3.2vw, 44px) auto 0;
+  border: 1px solid #98e3f259;
+  border-radius: clamp(10px, 2vw, 20px);
+  background: #080e1e;
+  box-shadow: 0 0 60px #339fc22e;
+  overflow: hidden;
+}
+.atlas-preview img { display: block; width: 100%; height: auto; }
+.atlas-method { margin-top: clamp(48px, 8vw, 100px); }
+.atlas-method > p { margin-block: 16px; max-width: 65ch; color: var(--muted); }
+.atlas-method > a { color: var(--cyan); text-underline-offset: 4px; }
+.atlas-variables {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 24px 0;
+}
+.atlas-variables > div { padding: 18px; border: 1px solid var(--line); background: #0b1725ed; }
+.atlas-variables dt { color: var(--cyan); font-weight: 700; }
+.atlas-variables dd { margin: 4px 0 0; color: #cedce5; }
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 7vw;
+  color: var(--cyan);
+  font: 12px ui-monospace, monospace;
+}
+footer nav { display: flex; gap: 16px; }
+@media (max-width: 700px) {
+  .atlas-variables { grid-template-columns: 1fr; }
+}
+
 .surface-foreground {
   position: absolute;
   z-index: -1;
@@ -354,8 +552,98 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
   background: url(assets/foreground-rock.png) center bottom / 100% 100% no-repeat;
 }
 .surface .occlusion { z-index: 0; }
-.surface-transition, .surface .field, .surface .art-credit { z-index: 1; }
+.surface-transition, .surface .field { z-index: 1; }
 .atacama .surface-foreground { filter: sepia(.35); }
+.atacama .field { width: min(100%, 438px); padding: clamp(18px, 2.7vw, 32px); }
+.atacama .field h2 { margin: 8px 0 12px; font-size: clamp(32px, 4vw, 56px); }
+.mars-ground { --terrain: url(assets/mars-mount-sharp.webp); }
+.mars-ground .landscape {
+  inset: -9%;
+  background-image: linear-gradient(170deg, #8f4e2d20, #170b0830), var(--terrain);
+  background-position: 50% 54%;
+}
+.mars-ground .surface-foreground { filter: sepia(.67) saturate(1.52) brightness(.76); }
+.mars-ground-caption {
+  position: relative;
+  z-index: 1;
+  justify-self: start;
+  padding: 10px 14px;
+  border-left: 1px solid #fff8;
+  background: #160f0cc2;
+}
+.mars-ground-caption h2 { margin: 0 0 4px; font-size: clamp(20px, 2.4vw, 34px); letter-spacing: -.025em; }
+.mars-ground-caption a { font: 11px ui-monospace, monospace; text-underline-offset: 4px; }
+.mars-rover {
+  position: absolute;
+  z-index: 2;
+  right: 7vw;
+  bottom: 7svh;
+  display: grid;
+  justify-items: end;
+  gap: 14px;
+  width: clamp(205px, 25vw, 350px);
+  margin: 0;
+}
+.mars-rover figcaption {
+  position: relative;
+  padding: 11px 15px;
+  border: 1px solid #bffaf59c;
+  border-radius: 9px;
+  background: #08151ef2;
+  color: #f4fafb;
+  font-size: clamp(14px, 1.25vw, 17px);
+  line-height: 1.35;
+}
+.mars-rover figcaption::after {
+  position: absolute;
+  right: 25%;
+  bottom: -9px;
+  width: 14px;
+  height: 14px;
+  border-right: inherit;
+  border-bottom: inherit;
+  background: #08151ef2;
+  content: "";
+  transform: rotate(45deg);
+}
+.mars-rover img {
+  display: block;
+  width: 86%;
+  height: auto;
+  filter: drop-shadow(-3px 12px 7px #170e0cb0);
+}
+@media (max-width: 700px) {
+  .mars-rover { right: 6vw; bottom: 21svh; width: min(56vw, 240px); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .earth > :is(.mars-ground, .atacama) { position: absolute; inset: 0; }
+  .earth > .atacama { z-index: 11; }
+  .earth > .mars-ground {
+    z-index: 12;
+    mask-image: linear-gradient(#000 calc(100% - var(--mars-feather, 0%)), transparent 100%);
+  }
+  .mars-passage-rock {
+    position: absolute;
+    inset: -15% 0 -35%;
+    z-index: 0;
+    display: block;
+    background-size: cover;
+    filter: sepia(.76) saturate(1.3) brightness(.91);
+  }
+  .departure-moon {
+    position: absolute;
+    z-index: 6;
+    left: 50%;
+    top: 50%;
+    display: block;
+    visibility: hidden;
+    width: min(86vw, 78svh);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    background: url(assets/orbital-moon-hd.webp) center / contain no-repeat;
+    pointer-events: none;
+  }
+}
 @media (max-width: 700px) {
   .surface-foreground { inset-inline: -23%; height: 40%; }
 }
@@ -366,12 +654,6 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
 
 .cave-passage { display: none; }
 @media (prefers-reduced-motion: no-preference) {
-  .earth > .sites {
-    position: absolute;
-    inset: 0;
-    z-index: 8;
-    overflow: auto;
-  }
   .earth > .cave-passage {
     display: block;
     position: absolute;
@@ -393,15 +675,13 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
   .earth > .mars::before { display: none; }
 }
 
-.cave-wall,
-.cave-terrain,
-.cave-shadow {
+.cave-wall {
   position: absolute;
   inset: 0;
 }
 .cave-wall {
   /* Match the source pixels shared by the panorama and each extended wall. */
-  --plate-height: max(124svh, 100vw * 2 / 3);
+  --plate-height: max(124svh, 120vw * 2 / 3);
   inset: auto;
   top: calc(47.52% - var(--plate-height) / 2);
   height: var(--plate-height);
@@ -421,92 +701,6 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
   background-image: url(assets/lado-derecho.webp);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 17% 100%, 18% 94%, 20% 88%, 19% 83%, 20% 77%, 20% 73%, 19% 71%, 17% 70%, 16% 68%, 14% 68.5%, 12.5% 67.5%, 11% 65.5%, 10.5% 63.5%, 11.5% 61.5%, 12.5% 60%, 12% 58.5%, 13% 57%, 14.5% 56.5%, 14% 54.5%, 15.5% 53%, 16% 51%, 17.5% 50%, 18% 48%, 19.5% 47%, 21% 44%, 23% 40%, 21% 37%, 20% 34%, 21% 31%, 21% 28%, 20% 24%, 21% 22%, 18% 21%, 17% 17%, 17% 15%, 14% 14%, 13% 11%, 13% 9%, 11% 7%, 10% 6%, 8% 7%, 5% 6%, 2% 7%, 0 6%);
 }
-.cave-shadow { z-index: 1; background: #000; }
-.lunar-eyelids {
-  --lid-cover: 1;
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-}
-.lunar-eyelids::before,
-.lunar-eyelids::after {
-  content: "";
-  position: absolute;
-  inset-inline: 0;
-  height: 51%;
-  background: #000;
-  transform: scaleY(var(--lid-cover));
-}
-.lunar-eyelids::before {
-  top: 0;
-  transform-origin: top;
-  border-radius: 0 0 46% 46% / 0 0 12% 12%;
-}
-.lunar-eyelids::after {
-  bottom: 0;
-  transform-origin: bottom;
-  border-radius: 46% 46% 0 0 / 12% 12% 0 0;
-}
-.cave-terrain {
-  inset: -10%;
-  background: url(assets/lunar-terrain-hd.webp) center / cover no-repeat;
-  transform-origin: 50% 68%;
-}
-.cave-astronaut {
-  position: absolute;
-  left: 30%;
-  bottom: 24%;
-  width: clamp(76px, 16svh, 156px);
-  aspect-ratio: 1;
-  animation: astronaut-crossing 16s linear -1.3s infinite var(--walk-state, paused);
-}
-.cave-astronaut::before {
-  content: "";
-  position: absolute;
-  inset: auto 23% 3% -22%;
-  height: 14%;
-  background: radial-gradient(ellipse at 78% 38%, #060b13d9, #0b152080 40%, transparent 72%);
-  transform: rotate(-13deg);
-}
-.cave-astronaut::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: url(assets/astronaut-walk.png) 0 0 / 400% 200% no-repeat;
-  animation:
-    astronaut-steps 2s steps(1, end) infinite var(--walk-state, paused),
-    astronaut-lift 1s ease-in-out infinite var(--walk-state, paused);
-}
-@keyframes astronaut-lift {
-  0%, 100% { transform: translateY(0); }
-  42% { transform: translateY(-3%); }
-}
-@keyframes astronaut-crossing {
-  0% { transform: translateX(0); opacity: 0; }
-  8% { opacity: 1; }
-  88% { opacity: 1; }
-  100% { transform: translateX(36vw); opacity: 0; }
-}
-@keyframes astronaut-steps {
-  0%     { background-position: 0 0; }
-  12.5%  { background-position: 33.333% 0; }
-  25%    { background-position: 66.667% 0; }
-  37.5%  { background-position: 100% 0; }
-  50%    { background-position: 0 100%; }
-  62.5%  { background-position: 33.333% 100%; }
-  75%    { background-position: 66.667% 100%; }
-  87.5%  { background-position: 100% 100%; }
-}
-.cave-moon {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: min(86vw, 78svh);
-  aspect-ratio: 1;
-  translate: -50% -50%;
-  background: url(assets/orbital-moon-hd.webp) center / contain no-repeat;
-}
-
 .hero-flyby {
   display: none;
   position: absolute;
@@ -539,18 +733,41 @@ h1,h2,h3,p{margin:0}h1,h2{font-size:clamp(44px,6.5vw,102px);line-height:.98;lett
   .hero-flyby { display: block; }
 }
 
-@keyframes hero-copy-enter {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes launch-title {
+  from { transform: translateX(var(--launch-offset)) scale(1.16); }
+  to { transform: none; }
 }
 
-@keyframes earth-enter {
-  from { transform: translateY(20px); opacity: .45; }
-  to { transform: translateY(0); opacity: 1; }
+@keyframes reveal-title {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes launch-premise {
+  from { opacity: 0; filter: blur(6px); }
+  to { opacity: 1; filter: blur(0); }
+}
+
+@keyframes launch-earth {
+  from { transform: translateY(14%) scale(.88) rotate(14deg); filter: brightness(.35); }
+  65% { filter: brightness(1.28); }
+  to { transform: none; filter: brightness(1); }
+}
+
+@keyframes launch-stars {
+  from { opacity: 0; transform: scale(1.24); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .earth-globe::before { animation: earth-enter .65s ease-out; }
-  .hero-title h1 { animation: hero-copy-enter .65s ease-out both; }
-  .hero-title .hero-premise { animation: hero-copy-enter .55s .16s ease-out both; }
+  .is-launching .hero-stars { animation: launch-stars .78s var(--launch-reveal-at) ease-out backwards; }
+  .is-launching .earth-globe::before { animation: launch-earth .78s var(--launch-reveal-at) ease-out backwards; }
+  .is-launching .hero-title h1 { animation: reveal-title .77s calc(var(--launch-reveal-at) + .01s) ease-in-out backwards; }
+  .is-launching .hero-title h1 span {
+    --launch-offset: -14%;
+    animation: launch-title .65s calc(var(--launch-reveal-at) + .03s) cubic-bezier(.16,1,.3,1) backwards;
+  }
+  .is-launching .hero-premise, .is-launching .hero-title .atlas-link {
+    animation: launch-premise .43s calc(var(--launch-reveal-at) + .35s) ease-out backwards;
+  }
 }
