@@ -199,10 +199,20 @@ export function setupStory(root) {
     })
       .from(preview, {y: 62, scale: .84, rotateX: 16, transformPerspective: 950, opacity: .22, duration: .75}, .2);
     const variables = atlas.querySelector('.atlas-variables');
-    gsap.from(variables.children, {
-      y: 26, opacity: .45, stagger: .12,
-      scrollTrigger: {trigger: variables, start: 'top 95%', end: 'top 63%', scrub: .25}
+    const story = atlas.querySelector('.atlas-story');
+    const metricCards = [...variables.children];
+    const stack = gsap.timeline({
+      defaults: {ease: 'none'},
+      scrollTrigger: {
+        trigger: atlas.querySelector('.atlas-stack-stage'),
+        pin: true, start: 'top top', end: () => '+=' + innerHeight * 2.8,
+        scrub: .25, invalidateOnRefresh: true,
+        onUpdate: self => { story.dataset.step = String(self.progress < .47 ? 0 : self.progress < .85 ? 1 : 2); }
+      }
     });
+    stack.fromTo(metricCards[1], {y: () => variables.clientHeight + 24}, {y: 0, duration: 1}, .6)
+      .fromTo(metricCards[2], {y: () => variables.clientHeight + 24}, {y: 0, duration: 1}, 1.9)
+      .to({}, {duration: .5}, 2.9);
 
     const scroller = new Lenis({autoRaf: true, lerp: .12, naiveDimensions: true, stopInertiaOnNavigate: true});
     scroller.on('scroll', ScrollTrigger.update);
