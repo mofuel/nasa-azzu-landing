@@ -1,13 +1,16 @@
-import React, {useLayoutEffect, useRef} from 'react';
+import React, {useLayoutEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
+import {ScrollTrigger} from 'gsap/ScrollTrigger';
 import {setupStory} from './mission.js';
+import {copy, defaultLanguage, languageKey} from './copy.js';
 import '@fontsource/barlow/latin-400.css';
 import '@fontsource/barlow/latin-700.css';
 import satellite from './assets/hero-satellite.webp';
 import marsOrbit from './assets/mars-orbit.webp';
 import curiosity from './assets/curiosity-rover.webp';
-import atlasPreview from './assets/tsumi-atlas.webp';
+import atlasPreview from './assets/tsumi-atlas.png';
 import nasaLogo from './assets/logo-nasa-blanco.svg?raw';
+import launchMark from './assets/logo-nasa-blanco.svg';
 import './style.css';
 
 function animateLogoSparks(paths) {
@@ -78,15 +81,32 @@ function revealLanding() {
   animateLogoSparks(paths);
   screen.addEventListener('animationend', event => {
     if (event.target !== screen) return;
+    root.classList.remove('is-launching');
     root.inert = false;
     screen.remove();
   });
 }
 
-function AtlasLink() {
+function AtlasLink({label, showMark = true}) {
   return <a className="atlas-link" href="https://nasa.azzu.tech/atlas/">
-    <span>Abrir el Atlas</span><span aria-hidden="true">↗</span>
+    <span>{label}</span>{showMark && <img src={launchMark} alt="" width="36" height="36" />}
   </a>;
+}
+
+function LanguageSwitch({language, label, onChange}) {
+  return <div className="language-switch" role="group" aria-label={label}>
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3">
+      <circle cx="12" cy="12" r="8.5" /><ellipse cx="12" cy="12" rx="4" ry="8.5" /><path d="M4 12h16" />
+    </svg>
+    <button type="button" lang="en" aria-label="English" aria-pressed={language === 'en'} onClick={() => onChange('en')}>EN</button>
+    <button type="button" lang="es" aria-label="Español" aria-pressed={language === 'es'} onClick={() => onChange('es')}>ES</button>
+  </div>;
+}
+
+function ScrollMark() {
+  return <svg width="24" height="25" viewBox="0 0 24 25" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M4 13 12 5l8 8m-12 4 4-4 4 4" />
+  </svg>;
 }
 
 function Surface({id, transition, children}) {
@@ -103,59 +123,86 @@ function Surface({id, transition, children}) {
   );
 }
 
-function TerrainProfile({step}) {
+function TerrainProfile({step, t}) {
   return (
     <figure className="terrain-story" data-step={step}>
         <svg viewBox="0 0 600 420" role="img" aria-labelledby={'terrain-story-title-' + step + ' terrain-story-desc-' + step}>
-          <title id={'terrain-story-title-' + step}>Tres maneras de comparar el relieve</title>
-          <desc id={'terrain-story-desc-' + step}>Un perfil ilustrativo destaca la inclinación típica, los tramos de mayor pendiente y la diferencia de elevación.</desc>
+          <title id={'terrain-story-title-' + step}>{t('profileTitle')}</title>
+          <desc id={'terrain-story-desc-' + step}>{t('profileDescription')}</desc>
           <defs>
             <linearGradient id={'terrain-fill-' + step} x1="0" y1="0" x2="0" y2="1"><stop stopColor="#81e5db" stopOpacity=".2" /><stop offset="1" stopColor="#81e5db" stopOpacity="0" /></linearGradient>
           </defs>
           <g className="terrain-grid"><path d="M40 90H560M40 160H560M40 230H560M40 300H560M110 55V355M220 55V355M330 55V355M440 55V355M550 55V355" /></g>
           <path className="terrain-fill" style={{fill: 'url(#terrain-fill-' + step + ')'}} d="M40 310 110 290 180 240 240 260 305 210 355 100 410 135 475 230 560 190V355H40Z" />
-          <path className="terrain-profile" d="m40 310 70-20 70-50 60 20 65-50 50-110 55 35 65 95 85-40" />
+          <path className="terrain-profile" pathLength="1" d="m40 310 70-20 70-50 60 20 65-50 50-110 55 35 65 95 85-40" />
           <g className="terrain-detail terrain-median" aria-hidden="true">
-            <path className="terrain-highlight" d="m110 290 70-50" />
+            <path className="terrain-highlight" pathLength="1" d="m110 290 70-50" />
             <path className="terrain-guide" d="M110 290H208M158 290Q158 274 150 262" />
-            <circle cx="110" cy="290" r="5" /><text x="72" y="355">INCLINACIÓN TÍPICA</text>
+            <circle cx="110" cy="290" r="5" /><text x="72" y="355">{t('profileMedian')}</text>
           </g>
           <g className="terrain-detail terrain-steep" aria-hidden="true">
-            <path className="terrain-highlight" d="m305 210 50-110" />
+            <path className="terrain-highlight" pathLength="1" d="m305 210 50-110" />
             <path className="terrain-guide" d="M355 100V65H475" />
-            <circle cx="355" cy="100" r="5" /><text x="355" y="48">MAYOR PENDIENTE</text>
+            <circle cx="355" cy="100" r="5" /><text x="355" y="48">{t('profileP90')}</text>
           </g>
           <g className="terrain-detail terrain-height" aria-hidden="true">
             <path className="terrain-guide" d="M80 290H520M355 120H520" />
-            <path className="terrain-highlight" d="M510 120V290M500 120H520M500 290H520" />
+            <path className="terrain-highlight" pathLength="1" d="M510 120V290M500 120H520M500 290H520" />
             <text x="450" y="109">P95</text><text x="450" y="318">P5</text>
           </g>
         </svg>
-        <figcaption>Un mismo relieve. Tres lecturas.<span>Esquema ilustrativo · sin escala</span></figcaption>
-        <div className="terrain-progress" aria-hidden="true"><span /><span /><span /></div>
       </figure>
   );
 }
 
 function App() {
   const story = useRef(null);
+  const [language, setLanguage] = useState(() => {
+    try {
+      if (localStorage.getItem(languageKey) === 'es') return 'es';
+    } catch {
+      // The default also works with storage disabled.
+    }
+    return defaultLanguage;
+  });
+  const t = key => copy[key][language === 'es' ? 1 : 0];
+  useLayoutEffect(() => {
+    document.documentElement.lang = language;
+    document.title = t('title');
+    document.querySelector('meta[name="description"]').content = t('description');
+    document.getElementById('loading-screen')?.setAttribute('aria-label', t('loading'));
+    try {
+      localStorage.setItem(languageKey, language);
+    } catch {
+      // Keep the selected language for the current visit.
+    }
+    const refresh = requestAnimationFrame(() => ScrollTrigger.refresh());
+    return () => cancelAnimationFrame(refresh);
+  }, [language]);
   useLayoutEffect(() => {
     const disposeStory = setupStory(story.current);
     revealLanding();
     return disposeStory;
   }, []);
   return (
-    <div ref={story}>
+    <div className="landing" ref={story}>
+<LanguageSwitch language={language} label={t('language')} onChange={setLanguage} />
 <div className="viewfinder" aria-hidden="true"><i /><i /><i /><i /></div>
+<div className="journey-progress" role="progressbar" aria-label={t('progress')} aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span /></div>
+<div className="hero-stars" aria-hidden="true"><canvas /></div>
 <main>
 <section id="tierra" className="orbital earth">
-  <div className="hero-stars" aria-hidden="true"><canvas /></div>
   <div className="hero-title">
-    <h1><span>AZZU</span></h1>
-    <p className="hero-premise">De la Tierra a la Luna y Marte.</p>
-    <AtlasLink />
+    <h1><span>AZZU</span>{' '}<span className="hero-atlas-name">Atlas</span></h1>
+    <div className="hero-actions">
+      <AtlasLink label={t('openAtlas')} />
+      <div className="hero-scroll-cue">
+        <span>{t('scrollCue')}</span>
+        <a className="hero-scroll" href="#luna" data-direction="down" aria-label={t('scroll')}><ScrollMark /></a>
+      </div>
+    </div>
   </div>
-  <div className="earth-globe" role="img" aria-label="Modelo ilustrativo de la Tierra">
+  <div className="earth-globe" role="img" aria-label={t('earthImage')}>
     <div className="hero-flyby" aria-hidden="true"><img src={satellite} alt="" /></div>
   </div>
   <div className="hero-moon" aria-hidden="true" />
@@ -167,27 +214,34 @@ function App() {
     <span className="lunar-scan-point" aria-hidden="true" />
     <div className="lunar-scan-card">
       <div className="lunar-scan-story">
-        <h2>Un hogar bajo la Luna</h2>
-        <p>Las cuevas volcánicas podrían proteger futuras bases lunares. Explora su análogo en California: allí se ensaya cómo encontrar estos refugios con radar.</p>
+        <h2>{t('moonTitle')}</h2>
+        <p>{t('moonIntro')}</p>
       </div>
-      <h2 id="lunar-scan-title"><span aria-hidden="true">ⓘ</span> Ficha orbital · Luna</h2>
+      <h2 id="lunar-scan-title"><span aria-hidden="true">ⓘ</span> {t('moonOrbital')}</h2>
       <dl>
-        <div><dt>Rasgo</dt><dd>Tubos de lava</dd></div>
-        <div><dt>Ensayo</dt><dd>Radar desde la superficie</dd></div>
-        <div><dt>Análogo terrestre</dt><dd>Lava Beds, California</dd></div>
+        <div><dt>{t('feature')}</dt><dd>{t('lavaTubes')}</dd></div>
+        <div><dt>{t('test')}</dt><dd>{t('radar')}</dd></div>
+        <div><dt>{t('earthAnalog')}</dt><dd>Lava Beds, California</dd></div>
       </dl>
-      <a className="lunar-scan-link" href="#lava">Explorar Lava Beds <span aria-hidden="true">↓</span></a>
+      <a className="lunar-scan-link" href="#lava">{t('exploreLava')} <span aria-hidden="true">↓</span></a>
     </div>
   </aside>
-<section className="hero-landing lunar-surface" aria-label="Superficie lunar">
-  <p className="lunar-location label"><span aria-hidden="true">⌖</span> Luna</p>
+<section className="hero-landing lunar-surface" aria-label={t('moonSurface')}>
+  <article className="field field-location lunar-location">
+    <div className="lunar-terrain-pointer" aria-hidden="true">
+      <svg viewBox="0 0 360 300" preserveAspectRatio="none"><path d="M360 0H232L0 300" /></svg>
+      <span className="lunar-terrain-point" />
+    </div>
+    <h2>{t('moon')}</h2>
+    <p>{t('moonLandscape')}</p>
+  </article>
 </section>
-<Surface id="lava" transition="De la Luna a California">
-  <article className="field">
+<Surface id="lava" transition={t('moonToCalifornia')}>
+  <article className="field field-location">
     <p className="label">CALIFORNIA</p>
     <h2 tabIndex={-1}>Lava Beds</h2>
-    <p>El radar de TubeX detectó el techo de dos tubos de lava desde la superficie.</p>
-    <a href="https://ntrs.nasa.gov/citations/20205000768">Estudio TubeX ↗</a>
+    <p>{t('lavaDescription')}</p>
+    <a href="https://ntrs.nasa.gov/citations/20205000768">{t('tubeStudy')} ↗</a>
   </article>
 </Surface>
 <div className="cave-passage" aria-hidden="true">
@@ -196,7 +250,7 @@ function App() {
 </div>
 <div className="departure-moon" aria-hidden="true" />
 <section id="marte" className="orbital mars">
-  <img className="planet" src={marsOrbit} alt="Vista ilustrada de Marte" />
+  <img className="planet" src={marsOrbit} alt={t('marsImage')} />
   <aside className="lunar-scan mars-scan" aria-labelledby="mars-scan-title">
     <svg className="lunar-scan-line" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
       <path className="scan-line-wide" d="M725 490V395L685 210" />
@@ -204,87 +258,116 @@ function App() {
     </svg>
     <span className="lunar-scan-point" aria-hidden="true" />
     <div className="lunar-scan-card">
-      <h2 id="mars-scan-title"><span aria-hidden="true">ⓘ</span> Ficha orbital · Marte</h2>
+      <h2 id="mars-scan-title"><span aria-hidden="true">ⓘ</span> {t('marsOrbital')}</h2>
       <dl>
-        <div><dt>Ensayo</dt><dd>Detección de biofirmas</dd></div>
-        <div><dt>Condición</dt><dd>Suelo hiperárido</dd></div>
-        <div><dt>Sitio de ensayo</dt><dd>Atacama, Chile</dd></div>
+        <div><dt>{t('test')}</dt><dd>{t('biosignatures')}</dd></div>
+        <div><dt>{t('condition')}</dt><dd>{t('drySoil')}</dd></div>
+        <div><dt>{t('testSite')}</dt><dd>Atacama, Chile</dd></div>
       </dl>
     </div>
   </aside>
-  <div className="intro"><p className="label">MARTE</p><h2>Rumbo a Marte, desde la Tierra</h2><p className="summary">Descubre uno de los tantos lugares análogos que pueden existir en la Tierra para prepararnos de camino a Marte.</p><a className="button" href="#suelo-marciano">Descender a Marte <span aria-hidden="true">↓</span></a></div>
+  <div className="intro"><p className="label">{t('mars')}</p><h2>{t('marsTitle')}</h2><p className="summary">{t('marsIntro')}</p></div>
 </section>
 <section id="suelo-marciano" className="surface mars-ground" aria-labelledby="mars-ground-title">
   <div className="landscape" aria-hidden="true" />
   <div className="surface-foreground" aria-hidden="true" />
-  <div className="mars-ground-caption">
-    <h2 id="mars-ground-title" tabIndex={-1}>Monte Sharp, Marte</h2>
+  <article className="field field-location mars-ground-caption">
+    <p className="label">{t('gale')}</p>
+    <h2 id="mars-ground-title" tabIndex={-1}>{t('mountSharp')}</h2>
+    <p>{t('mountDescription')}</p>
     <a href="https://science.nasa.gov/photojournal/mount-sharp-buttes-and-layers-from-near-darwin/">NASA/JPL-Caltech/MSSS ↗</a>
-  </div>
+  </article>
   <figure className="mars-rover">
-    <figcaption><strong>Soy Curiosity.</strong> Soy el rover de la NASA que fotografió el Monte Sharp.</figcaption>
-    <img src={curiosity} width="248" height="222" alt="Modelo del rover Curiosity de NASA/JPL-Caltech" />
+    <figcaption><strong>{t('curiosity')}</strong> {t('curiosityDescription')}</figcaption>
+    <img src={curiosity} width="248" height="222" alt={t('curiosityImage')} />
   </figure>
 </section>
 <Surface id="atacama">
   <div className="mars-passage-rock" aria-hidden="true" />
-  <p className="surface-transition mars-transition">De Marte a Atacama</p>
-  <article className="field"><p className="label">NORTE DE CHILE</p><h2 tabIndex={-1}>Desierto de Atacama</h2><p>El rover de prueba ARADS recogió muestras de suelo hiperárido para buscar señales de vida microbiana.</p><a href="https://www.nasa.gov/universe/atacama-rover-astrobiology-drilling-studies-arads/">Ver los ensayos de ARADS ↗</a></article>
+  <p className="surface-transition mars-transition">{t('marsToAtacama')}</p>
+  <article className="field field-location"><p className="label">{t('northernChile')}</p><h2 tabIndex={-1}>{t('atacama')}</h2><p>{t('atacamaDescription')}</p><a href="https://www.nasa.gov/universe/atacama-rover-astrobiology-drilling-studies-arads/">{t('arads')} ↗</a></article>
   <div className="atacama-orbit" aria-hidden="true">
     <img src={marsOrbit} alt="" />
   </div>
 </Surface>
   <div className="atlas-intro">
-    <h2>¿Dónde ensayar<br />el próximo recorrido?</h2>
-    <p>Con el Atlas de AZZU puedes buscar terrenos en la Tierra parecidos al polo sur lunar y elegir candidatos para ensayos de movilidad.</p>
-    <AtlasLink />
+    <h2>{t('searchLine1')}<br />{t('searchLine2')}</h2>
+    <p>{t('searchDescription')}</p>
+    <svg className="atlas-search-symbol" viewBox="0 0 184 82" fill="none" aria-hidden="true">
+      <path d="M1 41h182M92 1v80" />
+      <ellipse cx="92" cy="41" rx="89" ry="37" />
+      <ellipse cx="92" cy="41" rx="61" ry="26" />
+      <ellipse cx="92" cy="41" rx="32" ry="14" />
+      <path className="atlas-search-signal" d="M92 41 147 20m-55 21L55 62" />
+      <circle cx="92" cy="41" r="5" /><circle cx="147" cy="20" r="4" /><circle cx="55" cy="62" r="3" />
+    </svg>
   </div>
 </section>
-<section id="comparar" className="atlas-scene">
+<section id="comparar" className="atlas-scene" aria-label={t('atlasSection')}>
   <figure className="atlas-preview">
-    <img src={atlasPreview} width="1366" height="786" loading="lazy" alt="Atlas de AZZU con el mapa de candidatos terrestres y el panel de comparación científica" />
-  </figure>
-  <div className="atlas-method">
-    <div className="atlas-stack-stage">
-    <p className="label">QUÉ MIDE EL ATLAS</p>
-    <h3>Tres formas de leer un terreno.</h3>
-    <p>Usamos datos de elevación de NASA (LOLA) y Copernicus (GLO-30) para comparar sectores de 3 km de lado a una resolución común de 60 m en el Atlas.</p>
-    <div className="atlas-story" data-step="0">
-
-      <div className="atlas-variables">
-        <div className="atlas-story-step" style={{'--card-index': 0}}>
-          <dl className="metric-copy">
-          <dt data-reveal><span className="story-number" aria-hidden="true">01 / 03</span>Pendiente mediana</dt>
-          <dd data-reveal>Primero, la inclinación habitual.<p>La mediana resume la pendiente típica del terreno, en grados. Es el punto de partida para comparar cómo se inclinan dos superficies.</p></dd></dl>
-          <TerrainProfile step="0" />
-        </div>
-        <div className="atlas-story-step" style={{'--card-index': 1}}>
-          <dl className="metric-copy">
-          <dt data-reveal><span className="story-number" aria-hidden="true">02 / 03</span>Pendiente P90</dt>
-          <dd data-reveal>Después, los tramos más exigentes.<p>Esta es la inclinación que solo supera el 10 % del terreno. Permite mirar más allá de la pendiente típica y comparar las zonas más inclinadas.</p></dd></dl>
-          <TerrainProfile step="1" />
-        </div>
-        <div className="atlas-story-step" style={{'--card-index': 2}}>
-          <dl className="metric-copy">
-          <dt data-reveal><span className="story-number" aria-hidden="true">03 / 03</span>Desnivel P95–P5</dt>
-          <dd data-reveal>Por último, cuánto cambia la altura.<p>La diferencia entre los percentiles 95 y 5 de elevación, en metros, describe el contraste de alturas del sector que estamos comparando.</p></dd></dl>
-          <TerrainProfile step="2" />
+    <div className="atlas-laptop-body">
+      <div className="atlas-laptop-base" aria-hidden="true"><span /></div>
+      <div className="atlas-laptop-lid">
+        <div className="atlas-laptop-screen">
+          <div className="atlas-laptop-display">
+            <img src={atlasPreview} width="1802" height="873" loading="lazy" alt={t('atlasImage')} />
+          </div>
         </div>
       </div>
     </div>
+  </figure>
+  <div className="atlas-variables">
+    <div className="atlas-story-step">
+      <TerrainProfile t={t} step="0" />
+      <dl className="metric-copy">
+        <dt>{t('median')} <span>°</span></dt>
+        <dd>{t('medianDescription')}</dd>
+      </dl>
     </div>
-    <p>En la primera ejecución, SP Crater, en Arizona, quedó entre los percentiles 85 y 98. Las coincidencias de relieve ayudan a priorizar sitios para evaluar en campo.</p>
-    <a href="https://github.com/77ALDO77/tsumi_nasa_SA/blob/main/analisis/README.md">Ver método y resultados ↗</a>
+    <div className="atlas-story-step">
+      <TerrainProfile t={t} step="1" />
+      <dl className="metric-copy">
+        <dt>{t('p90')} <span>°</span></dt>
+        <dd>{t('p90Description')}</dd>
+      </dl>
+    </div>
+    <div className="atlas-story-step">
+      <TerrainProfile t={t} step="2" />
+      <dl className="metric-copy">
+        <dt>{t('relief')} <span>m</span></dt>
+        <dd>{t('reliefDescription')}</dd>
+      </dl>
+    </div>
+  </div>
+  <div className="atlas-selection">
+    <div className="atlas-selection-copy">
+      <h3>{t('fieldWork')}</h3>
+      <p>{t('fieldDescription')}</p>
+    </div>
+    <ol className="atlas-selection-flow" aria-label={t('selectionCriteria')}>
+      <li><span>{t('terrain')}</span><strong>{t('threeMetrics')}</strong></li>
+      <li><span>{t('vegetation')}</span><strong>{t('modis')}</strong></li>
+      <li><span>{t('result')}</span><strong>{t('candidate')}</strong></li>
+    </ol>
   </div>
 </section>
 </main>
-<footer>
-  <nav id="casos" aria-label="Casos de campo"><a href="#lava">Lava Beds</a><a href="#atacama">Atacama</a></nav>
-  <a href="#tierra">Volver a la Tierra ↑</a>
+<footer id="casos" className="mission-footer">
+  <div className="footer-horizon" aria-hidden="true"></div>
+  <div className="footer-main">
+    <h2><span>{t('footerLine1')}</span>{' '}<span>{t('footerLine2')}</span></h2>
+    <AtlasLink label={t('openAtlas')} showMark={false} />
+    <div className="footer-brand">
+      <span>AZZU</span>
+      <img src={launchMark} alt="" width="66" height="66" />
+    </div>
+  </div>
+  <div className="footer-links">
+    <a href="https://github.com/77ALDO77/tsumi_nasa_SA">{t('atlasGithub')} <span aria-hidden="true">↗</span></a>
+    <a href="https://github.com/mofuel/nasa-azzu-landing">{t('landingGithub')} <span aria-hidden="true">↗</span></a>
+  </div>
 </footer>
-<a className="back-to-top" href="#tierra" aria-label="Volver al inicio" title="Volver al inicio">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 15 7-7 7 7" /></svg>
-</a>
+<a className="back-to-top" href="#tierra" aria-label={t('back')} title={t('back')} hidden><ScrollMark /></a>
     </div>
   );
 }

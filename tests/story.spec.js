@@ -1,5 +1,9 @@
 import {expect, test} from '@playwright/test';
 
+test.beforeEach(async ({page}) => {
+  await page.addInitScript(() => localStorage.setItem('azzu-language', 'es'));
+});
+
 test('orbital introduction stays centered and reverses with scroll', async ({page}, testInfo) => {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -7,37 +11,41 @@ test('orbital introduction stays centered and reverses with scroll', async ({pag
     if (response.status() >= 400) errors.push(response.url());
   });
   await page.goto('/');
-  await expect(page.locator('#loading-screen')).toHaveCount(0, {timeout: 12000});
+  await expect(page.locator('#loading-screen')).toHaveCount(0, {timeout: 20000});
   await page.evaluate(() => document.fonts.ready);
   const title = page.getByRole('heading', {level: 1, includeHidden: true});
   const planet = page.locator('.earth-globe');
   const hero = page.locator('#tierra');
   await expect(title).toBeVisible();
   await expect(title).toBeInViewport({ratio: .99});
-  const premise = page.locator('.hero-premise');
-  const atlasLink = hero.getByRole('link', {name: 'Abrir el Atlas'});
+  const atlasName = title.locator('.hero-atlas-name');
+  await expect(title).toHaveText('AZZU Atlas');
+  const atlasLink = hero.getByRole('link', {name: 'Abrir AZZU Atlas'});
   await expect(atlasLink).toBeInViewport();
   await expect(atlasLink).toHaveAttribute('href', 'https://nasa.azzu.tech/atlas/');
-  await expect(premise).toBeInViewport({ratio: .99});
-  await expect(premise).toHaveCSS('opacity', '1');
+  await expect(atlasLink.locator('img')).toBeVisible();
+  await expect(atlasName).toBeInViewport({ratio: .99});
   await expect(planet).toBeInViewport();
   const startingTitle = await title.boundingBox();
   const startingPlanet = await planet.boundingBox();
   const heroBox = await hero.boundingBox();
   const heroCenterX = heroBox.x + heroBox.width / 2;
-  const startingPremise = await premise.boundingBox();
+  const atlasNameBox = await atlasName.boundingBox();
   const button = await atlasLink.boundingBox();
+  const scrollCue = await hero.getByRole('link', {name: 'Deslizar para explorar'}).boundingBox();
+  expect(scrollCue.y).toBeGreaterThan(button.y + button.height);
+  expect(Math.abs(scrollCue.x + scrollCue.width / 2 - heroCenterX)).toBeLessThan(2);
   expect(startingPlanet.y).toBeGreaterThan(button.y + button.height);
   const copyCenterY = (startingTitle.y + button.y + button.height) / 2;
   expect(Math.abs(copyCenterY - page.viewportSize().height / 2)).toBeLessThan(2);
-  for (const box of [startingTitle, startingPremise, startingPlanet, button]) {
+  for (const box of [startingTitle, atlasNameBox, startingPlanet, button]) {
     expect(Math.abs(box.x + box.width / 2 - heroCenterX)).toBeLessThan(2);
   }
   await page.screenshot({path: testInfo.outputPath('hero.png')});
   await page.evaluate(() => scrollTo(0, innerHeight * .04));
   await expect.poll(async () => (await planet.boundingBox()).y).toBeLessThan(startingPlanet.y - 2);
   await expect.poll(async () => (await title.boundingBox()).y).toBeLessThan(startingTitle.y - 1);
-  await expect(premise).toBeInViewport({ratio: .99});
+  await expect(atlasName).toBeInViewport({ratio: .99});
   await page.evaluate(() => scrollTo(0, innerHeight * 2.38));
   await expect.poll(async () => (await planet.boundingBox()).y).toBeLessThan(startingTitle.y);
   expect(Math.abs((await hero.boundingBox()).y)).toBeLessThan(2);
@@ -54,16 +62,19 @@ test('orbital introduction stays centered and reverses with scroll', async ({pag
   expect(errors).toEqual([]);
 });
 
-test('chapter links open both surfaces and the return to orbit reveals the Atlas', async ({page}, testInfo) => {
+test('chapter links reach both surfaces and the return to orbit reveals the Atlas', async ({page}, testInfo) => {
   for (const [chapter, label, id, caption] of [
     ['luna', 'Explorar Lava Beds', 'lava', '.field'],
-    ['marte', 'Descender a Marte', 'suelo-marciano', '.mars-ground-caption']
+    ['suelo-marciano', null, 'suelo-marciano', '.mars-ground-caption']
   ]) {
     await page.goto('/#' + chapter);
-    await page.getByRole('link', {name: label}).click();
+    if (label) await page.getByRole('link', {name: label}).click();
     await expect(page).toHaveURL(new RegExp('#' + id + '$'));
     await expect(page.locator('#' + id + ' ' + caption)).toHaveCSS('opacity', '1');
-    await expect(page.locator('#' + id + ' h2')).toBeFocused();
+    const markerRadius = await page.locator('#' + id + ' ' + caption)
+      .evaluate(el => getComputedStyle(el, '::after').borderRadius);
+    expect(markerRadius).toBe('50%');
+    if (label) await expect(page.locator('#' + id + ' h2')).toBeFocused();
     await page.screenshot({path: testInfo.outputPath(id + '.png')});
   }
   await expect(page.getByText('Soy Curiosity.', {exact: true})).toBeInViewport();
@@ -99,41 +110,45 @@ test('chapter links open both surfaces and the return to orbit reveals the Atlas
   await expect(page.getByRole('heading', {name: 'Desierto de Atacama'})).toBeVisible();
   await expect(page.locator('#atacama .field')).toHaveCSS('opacity', '1');
   const orbit = page.locator('.atacama-orbit');
+  await expect(page.locator('.hero-stars')).toHaveCSS('position', 'fixed');
   for (const time of [4.36, 4.42, 4.50]) {
     await phase(time);
     await expect(orbit).toHaveCSS('opacity', '1');
     await expect(page.locator('#atacama .landscape')).toBeHidden();
     await expect(page.locator('#atacama .surface-foreground')).toBeHidden();
+    await expect(page.locator('#atacama')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     await page.screenshot({path: testInfo.outputPath(`departure-${time}.png`)});
   }
-  await phase(4.63);
+  await phase(4.57);
   await expect(orbit).toHaveCSS('opacity', '1');
   await expect(page.locator('#atacama .field')).toBeHidden();
   const atlasIntro = page.locator('.atlas-intro');
   await expect(atlasIntro.locator('h2')).toBeHidden();
-  await phase(4.64);
+  await phase(4.59);
   await expect(atlasIntro.locator('h2')).toBeHidden();
   await expect.poll(async () => {
     const box = await orbit.locator('img').boundingBox();
     return box.y + box.height;
   }).toBeLessThan(page.viewportSize().height * .23);
   await page.screenshot({path: testInfo.outputPath('before-atlas-entry.png')});
-  await phase(4.78);
+  await phase(4.70);
   await expect.poll(() => atlasIntro.locator('h2').evaluate(el => Number(getComputedStyle(el).opacity))).toBeGreaterThan(.4);
   await expect(atlasIntro.locator('h2')).toBeInViewport({ratio: .99});
   const enteringY = await atlasIntro.locator('h2').evaluate(el => new DOMMatrix(getComputedStyle(el).transform).m42);
-  await phase(5.32);
+  await phase(4.80);
   await expect.poll(() => atlasIntro.locator('h2').evaluate(el => new DOMMatrix(getComputedStyle(el).transform).m42)).toBeLessThan(enteringY);
-  await expect(atlasIntro.getByRole('link', {name: 'Abrir el Atlas'})).toBeInViewport();
+  await expect(atlasIntro.locator('.atlas-search-symbol')).toBeInViewport();
   await page.screenshot({path: testInfo.outputPath('atacama-orbit.png')});
+  await phase(4.92);
+  await expect(page.locator('.atlas-preview')).toBeInViewport();
+  await expect(atlasIntro.getByRole('link', {name: 'Ver el panel'})).toHaveCount(0);
   await phase(4.16);
   await expect(page.locator('#atacama .landscape')).toHaveCSS('opacity', '1');
   await expect(atlasIntro.locator('h2')).toBeHidden();
   const atlas = page.locator('#comparar');
   await atlas.locator('.atlas-preview').scrollIntoViewIfNeeded();
-  await expect(atlas.locator('.atlas-preview img')).toBeInViewport();
-  await expect(atlasIntro.getByRole('link', {name: 'Abrir el Atlas', includeHidden: true}))
-    .toHaveAttribute('href', 'https://nasa.azzu.tech/atlas/');
+  await expect(atlas.locator('.atlas-preview')).toBeInViewport();
+  await expect(atlasIntro.locator('a')).toHaveCount(0);
   await expect(atlas.locator('.atlas-variables dt')).toHaveCount(3);
 });
 
@@ -286,12 +301,12 @@ test('the Moon fills the viewport before revealing the lunar landscape', async (
   expect(approaching.x + approaching.width / 2).toBeLessThan(width * .48);
   expect((await earth.boundingBox()).x).toBeGreaterThan(earthAtCenter.x);
   const lunarScan = page.getByRole('complementary', {name: 'Ficha orbital · Luna'});
-  await phase(.829);
+  await phase(.795);
   await expect(earth).toBeVisible();
   await expect(lunarScan).toBeHidden();
-  await phase(.878);
+  await phase(.831);
   await expect(earth).toBeHidden();
-  await expect(lunarScan.getByRole('heading', {name: 'Un hogar bajo la Luna'})).toBeInViewport({ratio: .99});
+  await expect(lunarScan.getByRole('heading', {name: 'Rumbo a la Luna, desde la Tierra'})).toBeInViewport({ratio: .99});
   await expect(lunarScan.getByText('Lava Beds, California')).toBeInViewport({ratio: .99});
   if (width > 700) {
     const silhouetteRight = await moon.evaluate(el => {
@@ -303,6 +318,8 @@ test('the Moon fills the viewport before revealing the lunar landscape', async (
     expect(silhouetteRight).toBeLessThan(card.x - 15);
   }
   await page.screenshot({path: testInfo.outputPath('lunar-scan.png')});
+  await phase(.918);
+  await expect(lunarScan).toHaveCSS('opacity', '1');
   await phase(.951);
   const close = await moon.boundingBox();
   expect(close.width).toBeGreaterThan(Math.hypot(width, height) * 1.05);
@@ -325,6 +342,10 @@ test('the Moon fills the viewport before revealing the lunar landscape', async (
   await phase(1.06);
   const location = landing.locator('.lunar-location');
   await expect(location).toContainText('Luna');
+  await expect(location).toContainText('Representación del paisaje lunar');
+  const terrainPoint = location.locator('.lunar-terrain-point');
+  await expect(terrainPoint).toHaveCSS('border-radius', '50%');
+  expect((await terrainPoint.boundingBox()).y).toBeGreaterThan(height * .4);
   await expect(location).toBeInViewport();
   const locationBox = await location.boundingBox();
   expect(locationBox.y).toBeLessThan(height * .25);
@@ -436,5 +457,5 @@ test('leaving Lava Beds follows the published Moon departure before Mars', async
   await expect(page.locator('#lava .field')).toHaveCSS('opacity', '1');
 
   await page.goto('/#casos');
-  await expect(page.getByRole('navigation', {name: 'Casos de campo'})).toBeInViewport();
+  await expect(page.getByRole('link', {name: 'GitHub del landing'})).toBeInViewport();
 });

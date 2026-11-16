@@ -12,10 +12,27 @@ export function setupStory(root) {
   };
   let landingTimeline;
   let lenis;
+  const backToTop = root.querySelector('.back-to-top');
+  const progressBar = root.querySelector('.journey-progress');
+  function updateScrollIndicators() {
+    const offset = window.scrollY;
+    const range = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const progress = gsap.utils.clamp(0, 1, offset / Math.max(range, 1));
+    const percent = String(Math.round(progress * 100));
+    backToTop.hidden = offset < innerHeight * 1.25;
+    progressBar.style.setProperty('--journey-progress', progress);
+    if (progressBar.getAttribute('aria-valuenow') !== percent) {
+      progressBar.setAttribute('aria-valuenow', percent);
+    }
+  }
+  updateScrollIndicators();
+  window.addEventListener('scroll', updateScrollIndicators, {passive: true});
+  window.addEventListener('resize', updateScrollIndicators);
+  ScrollTrigger.addEventListener('refresh', updateScrollIndicators);
   const media = gsap.matchMedia();
   media.add('(prefers-reduced-motion: no-preference)', () => {
     const hero = root.querySelector('.earth');
-    const stopStarfield = startStarfield(hero.querySelector('.hero-stars canvas'));
+    const stopStarfield = startStarfield(root.querySelector('.hero-stars canvas'));
     const select = gsap.utils.selector(hero);
     const moon = hero.querySelector('.hero-moon');
     const lunarScan = hero.querySelector('.lunar-scan');
@@ -43,8 +60,8 @@ export function setupStory(root) {
       [.69, {x: () => centerX() * .52, y: () => lowerCenterY() - hero.clientHeight * .025,
         scale: 1.16, rotation: -14}, 'sine.out'],
       [.74, nearMoon, 'sine.inOut'],
-      [.855, scannedMoon, 'sine.inOut'],
-      [.909, scannedMoon],
+      [.81, scannedMoon, 'sine.inOut'],
+      [.926, scannedMoon],
       [.95, landingMoon, 'sine.inOut'],
       [.997, {...landingMoon, scale: () => Math.hypot(hero.clientWidth, hero.clientHeight) * 1.23 / moon.offsetWidth}]
     ];
@@ -76,7 +93,7 @@ export function setupStory(root) {
     const orbit = atacama.querySelector('.atacama-orbit');
     const departingMars = orbit.querySelector('img');
     const atlasIntro = hero.querySelector('.atlas-intro');
-    const journeyEnd = 5.36;
+    const journeyEnd = 4.82;
     landingTimeline = gsap.timeline({
       scrollTrigger: {
         trigger: hero, pin: true, start: 'top top',
@@ -90,10 +107,10 @@ export function setupStory(root) {
       .to(select('.hero-title'), {y: () => -hero.clientHeight * .3, duration: .52}, .18)
       .to(select('.hero-title'), {autoAlpha: 0, duration: .10, ease: 'sine.inOut'}, .34)
       .to(select('.earth-globe'), {y: () => -hero.clientHeight * 1.13, scale: 1.42, duration: .60, ease: 'power1.out'}, .14)
-      .fromTo(lunarScan, {autoAlpha: 0}, {autoAlpha: 1, duration: .018}, .843)
-      .addLabel('lunarReading', .878)
-      .to(lunarScan, {autoAlpha: 0, duration: .015}, .889)
-      .to(select('.earth-globe'), {autoAlpha: 0, duration: .072, ease: 'sine.inOut'}, .768)
+      .fromTo(lunarScan, {autoAlpha: 0}, {autoAlpha: 1, duration: .015}, .809)
+      .addLabel('lunarReading', .865)
+      .to(lunarScan, {autoAlpha: 0, duration: .015}, .920)
+      .to(select('.earth-globe'), {autoAlpha: 0, duration: .055, ease: 'sine.inOut'}, .745)
       .to(select('.earth-globe'), {x: () => hero.clientWidth * .12, duration: .35, ease: 'sine.inOut'}, .39)
       .to(select('.earth-globe'), {x: () => hero.clientWidth * 1.06, duration: .114, ease: 'sine.inOut'}, .74)
       .to(select('.earth-globe'), {y: () => -hero.clientHeight * 1.43, scale: 1.13, duration: .18, ease: 'sine.in'}, .74)
@@ -175,14 +192,15 @@ export function setupStory(root) {
       .to(atacamaField, {y: 30, autoAlpha: 0, duration: .15}, 4.21)
       .fromTo(orbit, {autoAlpha: 0}, {autoAlpha: 1, duration: .08, ease: 'sine.inOut'}, 4.27)
       .set([atacamaLandscape, atacamaForeground], {autoAlpha: 0}, 4.35)
+      .set(atacama, {backgroundColor: 'transparent'}, 4.35)
       .fromTo(departingMars, {
         scale: () => Math.hypot(hero.clientWidth, hero.clientHeight) * 1.55 / departingMars.offsetWidth,
         yPercent: 0, y: 0
       }, {scale: .3, y: () => -hero.clientHeight * .44 - departingMars.offsetHeight * .15,
-        duration: .47, ease: 'power2.out'}, 4.35)
+        duration: .4, ease: 'power2.out'}, 4.35)
       .fromTo(atlasIntro.children, {y: 64, autoAlpha: 0},
-        {y: 0, autoAlpha: 1, duration: .36, stagger: .06, ease: 'power2.out'}, 4.65)
-      .to(departingMars, {autoAlpha: 0, duration: .18}, 4.93)
+        {y: 0, autoAlpha: 1, duration: .15, stagger: .028, ease: 'power2.out'}, 4.60)
+      .to(departingMars, {autoAlpha: 0, duration: .12}, 4.70)
       .to({}, {duration: .04}, journeyEnd - .04);
 
     for (let i = 1; i < lunarFlight.length; i++) {
@@ -195,24 +213,61 @@ export function setupStory(root) {
     const atlas = root.querySelector('#comparar');
     const preview = atlas.querySelector('.atlas-preview');
     gsap.timeline({
-      scrollTrigger: {trigger: atlas, start: 'top 97%', end: 'top 12%', scrub: .25}
-    })
-      .from(preview, {y: 62, scale: .84, rotateX: 16, transformPerspective: 950, opacity: .22, duration: .75}, .2);
-    const variables = atlas.querySelector('.atlas-variables');
-    const story = atlas.querySelector('.atlas-story');
-    const metricCards = [...variables.children];
-    const stack = gsap.timeline({
-      defaults: {ease: 'none'},
       scrollTrigger: {
-        trigger: atlas.querySelector('.atlas-stack-stage'),
-        pin: true, start: 'top top', end: () => '+=' + innerHeight * 2.8,
-        scrub: .25, invalidateOnRefresh: true,
-        onUpdate: self => { story.dataset.step = String(self.progress < .47 ? 0 : self.progress < .85 ? 1 : 2); }
+        trigger: preview, pin: true,
+        start: 'top 8%',
+        end: () => '+=' + innerHeight * .77,
+        scrub: .18, invalidateOnRefresh: true
       }
+    })
+      .from(preview.querySelector('.atlas-laptop-lid'), {
+        rotationX: () => getComputedStyle(preview).getPropertyValue('--laptop-closed-angle'),
+        duration: 1.2, ease: 'power2.inOut'
+      })
+      .fromTo(preview.querySelector('img'), {opacity: 0},
+        {opacity: 1, immediateRender: true, duration: .4, ease: 'power2.out'}, '+=.2')
+      .to({}, {duration: .27});
+
+    const metrics = atlas.querySelector('.atlas-variables');
+    gsap.from(metrics, {
+      y: 44, scale: .97, opacity: .46, ease: 'power2.out',
+      scrollTrigger: {trigger: metrics, start: 'top 97%', end: 'top 59%', scrub: .36}
     });
-    stack.fromTo(metricCards[1], {y: () => variables.clientHeight + 24}, {y: 0, duration: 1}, .6)
-      .fromTo(metricCards[2], {y: () => variables.clientHeight + 24}, {y: 0, duration: 1}, 1.9)
-      .to({}, {duration: .5}, 2.9);
+    [...metrics.querySelectorAll('.atlas-story-step')].forEach((card, index) => {
+      const graph = card.querySelector('svg');
+      gsap.timeline({scrollTrigger: {
+        trigger: card, start: () => 'top ' + (innerWidth > 760 ? 94 - index * 5 : 94) + '%',
+        end: 'center 47%', scrub: .22
+      }})
+        .from(card.querySelector('.metric-copy').children, {y: 22, opacity: .3, stagger: .13, duration: .62}, .22)
+        .from(graph.querySelector('.terrain-grid'), {opacity: .2, scaleY: .72, transformOrigin: '50% 85%', duration: .55}, 0)
+        .from(graph.querySelector('.terrain-fill'), {opacity: 0, duration: .65}, .25)
+        .fromTo(graph.querySelector('.terrain-profile'), {strokeDasharray: 1, strokeDashoffset: 1},
+          {strokeDashoffset: 0, duration: .67, ease: 'power2.inOut'}, .08)
+        .fromTo(graph.querySelectorAll('.terrain-highlight'), {strokeDasharray: 1, strokeDashoffset: 1},
+          {strokeDashoffset: 0, duration: .43, ease: 'power2.out'}, .54)
+        .from(graph.querySelectorAll('.terrain-detail text, .terrain-detail circle, .terrain-guide'),
+          {opacity: 0, duration: .32, ease: 'power2.out'}, .72);
+    });
+    const selection = atlas.querySelector('.atlas-selection');
+    gsap.timeline({scrollTrigger: {trigger: selection, start: 'top 97%', end: 'bottom 44%', scrub: .42}})
+      .from(selection.querySelector('.atlas-selection-copy').children, {
+        y: 30, opacity: .28, duration: .8, stagger: .14, ease: 'power2.out'
+      })
+      .from(selection.querySelector('.atlas-selection-flow'), {y: 36, opacity: .2, duration: .64}, .12)
+      .from(selection.querySelectorAll('li'), {x: 18, opacity: .3, stagger: .12, duration: .46}, .27);
+
+    const footer = root.querySelector('.mission-footer');
+    gsap.timeline({scrollTrigger: {trigger: footer, start: 'top 99%', end: 'bottom bottom+=20', scrub: .55}})
+      .from(footer.querySelector('.footer-horizon'), {
+        xPercent: 26, yPercent: 42, scale: 1.13, opacity: .12, duration: 2.15, ease: 'sine.out'
+      })
+      .from(footer.querySelectorAll('h2 span'), {
+        y: 74, opacity: .03, duration: 1.15, stagger: .21, ease: 'sine.out'
+      }, .35)
+      .from(footer.querySelector('.atlas-link'), {y: 22, opacity: .12, duration: .58, ease: 'sine.out'}, 1)
+      .from(footer.querySelector('.footer-brand'), {y: 24, opacity: .1, duration: .7, ease: 'sine.out'}, 1.25)
+      .from(footer.querySelector('.footer-links'), {y: 18, opacity: .32, duration: .62, ease: 'sine.out'}, 1.46);
 
     const scroller = new Lenis({autoRaf: true, lerp: .12, naiveDimensions: true, stopInertiaOnNavigate: true});
     scroller.on('scroll', ScrollTrigger.update);
@@ -240,6 +295,11 @@ export function setupStory(root) {
   function followSurfaceLink(event) {
     if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     const link = event.target.closest('a[href^="#"]');
+    if (link?.classList.contains('hero-scroll') && lenis) {
+      event.preventDefault();
+      lenis.scrollTo(innerHeight * 1.45);
+      return;
+    }
     if (link?.hash === '#tierra') {
       event.preventDefault();
       history.pushState(null, '', link.hash);
@@ -268,6 +328,9 @@ export function setupStory(root) {
   root.addEventListener('click', followSurfaceLink);
   return () => {
     cancelAnimationFrame(initialHashFrame);
+    window.removeEventListener('scroll', updateScrollIndicators);
+    window.removeEventListener('resize', updateScrollIndicators);
+    ScrollTrigger.removeEventListener('refresh', updateScrollIndicators);
     window.removeEventListener('hashchange', followSceneHash);
     media.revert();
     root.removeEventListener('click', followSurfaceLink);
