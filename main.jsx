@@ -133,8 +133,8 @@ function App() {
     <span className="lunar-scan-point" aria-hidden="true" />
     <div className="lunar-scan-card">
       <div className="lunar-scan-story">
-        <h2>¿Dónde vivir en la Luna?</h2>
-        <p>Los tubos de lava podrían servir de refugio para futuras bases lunares. En un terreno parecido de California se probó cómo localizarlos con radar.</p>
+        <h2>Un hogar bajo la Luna</h2>
+        <p>Las cuevas volcánicas podrían proteger futuras bases lunares. Explora su análogo en California: allí se ensaya cómo encontrar estos refugios con radar.</p>
       </div>
       <h2 id="lunar-scan-title"><span aria-hidden="true">ⓘ</span> Ficha orbital · Luna</h2>
       <dl>
@@ -178,7 +178,7 @@ function App() {
       </dl>
     </div>
   </aside>
-  <div className="intro"><p className="label">MARTE</p><h2>¿Hubo vida en Marte?</h2><p className="summary">En Atacama, la NASA ensayó cómo perforar un suelo parecido al marciano y buscar señales de vida bajo la superficie.</p><a className="button" href="#suelo-marciano">Descender a Marte <span aria-hidden="true">↓</span></a></div>
+  <div className="intro"><p className="label">MARTE</p><h2>Rumbo a Marte, desde la Tierra</h2><p className="summary">Descubre uno de los tantos lugares análogos que pueden existir en la Tierra para prepararnos de camino a Marte.</p><a className="button" href="#suelo-marciano">Descender a Marte <span aria-hidden="true">↓</span></a></div>
 </section>
 <section id="suelo-marciano" className="surface mars-ground" aria-labelledby="mars-ground-title">
   <div className="landscape" aria-hidden="true" />
@@ -199,8 +199,6 @@ function App() {
     <img src={marsOrbit} alt="" />
   </div>
 </Surface>
-</section>
-<section id="comparar" className="atlas-scene">
   <div className="atlas-intro">
     <h2>¿Dónde ensayar<br />el próximo recorrido?</h2>
     <p>Con el Atlas de AZZU puedes buscar terrenos en la Tierra parecidos al polo sur lunar y elegir candidatos para ensayos de movilidad.</p>
@@ -228,6 +226,7 @@ function App() {
 </footer>
     </div>
   );
+  <p className="surface-transition mars-transition">De Marte a Atacama</p>
 }
 
 createRoot(document.getElementById('root')).render(<App />);
@@ -235,3 +234,5 @@ createRoot(document.getElementById('root')).render(<App />);
 
 
 
+</section>
+<section id="comparar" className="atlas-scene">

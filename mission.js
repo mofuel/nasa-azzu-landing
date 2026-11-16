@@ -69,12 +69,14 @@ export function setupStory(root) {
     const marsRover = marsGround.querySelector('.mars-rover');
     const atacama = hero.querySelector('#atacama');
     const marsRock = atacama.querySelector('.mars-passage-rock');
+    const marsTransition = atacama.querySelector('.mars-transition');
     const atacamaLandscape = atacama.querySelector('.landscape');
     const atacamaForeground = atacama.querySelector('.surface-foreground');
     const atacamaField = atacama.querySelector('.field');
     const orbit = atacama.querySelector('.atacama-orbit');
     const departingMars = orbit.querySelector('img');
-    const journeyEnd = 4.83;
+    const atlasIntro = hero.querySelector('.atlas-intro');
+    const journeyEnd = 5.36;
     landingTimeline = gsap.timeline({
       scrollTrigger: {
         trigger: hero, pin: true, start: 'top top',
@@ -118,14 +120,14 @@ export function setupStory(root) {
         x: (index, wall) => wall.offsetHeight * (index === 0 ? .60 : -.60),
         duration: .19, ease: 'sine.inOut'
       }, 2.00)
-      .to(lavaView, {scale: .86, duration: .13, ease: 'sine.inOut'}, 2.06)
+      .to(lavaView, {scale: .86, duration: .19, ease: 'sine.inOut'}, 2.00)
       .set(landing, {autoAlpha: 0}, 2.08)
       .set(departureMoon, {
         autoAlpha: 1, scale: () => Math.hypot(hero.clientWidth, hero.clientHeight) * 1.25 / departureMoon.offsetWidth
-      }, 2.07)
-      .to([lavaView, caveWalls], {autoAlpha: 0, duration: .35, ease: 'sine.inOut'}, 2.07)
-      .set(cave, {autoAlpha: 0}, 2.42)
-      .to(departureMoon, {scale: .52, y: () => hero.clientHeight * .15, duration: .27, ease: 'sine.inOut'}, 2.42)
+      }, 2.00)
+      .to([lavaView, caveWalls], {autoAlpha: 0, duration: .32, ease: 'sine.inOut'}, 2.02)
+      .set(cave, {autoAlpha: 0}, 2.34)
+      .to(departureMoon, {scale: .52, y: () => hero.clientHeight * .15, duration: .61, ease: 'sine.inOut'}, 2.02)
       .to(departureMoon, {x: () => -hero.clientWidth * .5 - departureMoon.offsetWidth * .3,
         duration: .24, ease: 'sine.inOut'}, 2.63)
       .to(departureMoon, {y: () => -hero.clientHeight * .55, duration: .24, ease: 'power2.in'}, 2.63)
@@ -157,10 +159,13 @@ export function setupStory(root) {
       .to(marsCaption, {autoAlpha: 0, duration: .10}, 3.64)
       .set(atacama, {autoAlpha: 0}, 0)
       .set(atacama, {autoAlpha: 1}, 3.64)
+      .set(marsTransition, {autoAlpha: 0}, 0)
       .set(marsGround, {'--mars-feather': '7%'}, 3.64)
       .to(marsGround, {yPercent: -100, duration: .24}, 3.64)
       .fromTo(marsRock, {y: () => hero.clientHeight}, {y: 0, duration: .24}, 3.64)
       .set(marsGround, {autoAlpha: 0}, 3.88)
+      .fromTo(marsTransition, {y: 32}, {y: 0, autoAlpha: 1, duration: .06, ease: 'power2.out'}, 3.80)
+      .to(marsTransition, {y: -80, autoAlpha: 0, duration: .13, ease: 'power1.in'}, 3.91)
       .to(marsRock, {y: () => -hero.clientHeight * 1.36, duration: .24}, 3.88)
       .fromTo(atacamaLandscape, {yPercent: 13, scale: 1.14}, {yPercent: -3, scale: 1, duration: .28, ease: 'sine.out'}, 3.88)
       .fromTo(atacamaForeground, {yPercent: 48, xPercent: 10, scale: 1.13},
@@ -168,13 +173,17 @@ export function setupStory(root) {
       .fromTo(atacamaField, {y: 20, autoAlpha: 0}, {y: 0, autoAlpha: 1, duration: .13}, 4.01)
       .addLabel('atacamaReading', 4.16)
       .to(atacamaField, {y: 30, autoAlpha: 0, duration: .15}, 4.21)
-      .to([atacamaLandscape, atacamaForeground], {yPercent: 32, duration: .32, ease: 'power1.in'}, 4.22)
-      .fromTo(orbit, {autoAlpha: 0}, {autoAlpha: 1, duration: .25, ease: 'sine.inOut'}, 4.27)
+      .fromTo(orbit, {autoAlpha: 0}, {autoAlpha: 1, duration: .08, ease: 'sine.inOut'}, 4.27)
+      .set([atacamaLandscape, atacamaForeground], {autoAlpha: 0}, 4.35)
       .fromTo(departingMars, {
         scale: () => Math.hypot(hero.clientWidth, hero.clientHeight) * 1.55 / departingMars.offsetWidth,
-        yPercent: 52
-      }, {scale: .3, yPercent: -60, duration: .55, ease: 'power2.out'}, 4.27)
-      .to(departingMars, {autoAlpha: 0, duration: .11}, journeyEnd - .11);
+        yPercent: 0, y: 0
+      }, {scale: .3, y: () => -hero.clientHeight * .44 - departingMars.offsetHeight * .15,
+        duration: .47, ease: 'power2.out'}, 4.35)
+      .fromTo(atlasIntro.children, {y: 64, autoAlpha: 0},
+        {y: 0, autoAlpha: 1, duration: .36, stagger: .06, ease: 'power2.out'}, 4.65)
+      .to(departingMars, {autoAlpha: 0, duration: .18}, 4.93)
+      .to({}, {duration: .04}, journeyEnd - .04);
 
     for (let i = 1; i < lunarFlight.length; i++) {
       const [start, from] = lunarFlight[i - 1];
@@ -188,7 +197,6 @@ export function setupStory(root) {
     gsap.timeline({
       scrollTrigger: {trigger: atlas, start: 'top 97%', end: 'top 12%', scrub: .25}
     })
-      .from(atlas.querySelector('.atlas-intro'), {y: 35, scale: .96, opacity: .3, duration: .55}, 0)
       .from(preview, {y: 62, scale: .84, rotateX: 16, transformPerspective: 950, opacity: .22, duration: .75}, .2);
     const variables = atlas.querySelector('.atlas-variables');
     gsap.from(variables.children, {
