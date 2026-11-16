@@ -103,6 +103,40 @@ function Surface({id, transition, children}) {
   );
 }
 
+function TerrainProfile({step}) {
+  return (
+    <figure className="terrain-story" data-step={step}>
+        <svg viewBox="0 0 600 420" role="img" aria-labelledby={'terrain-story-title-' + step + ' terrain-story-desc-' + step}>
+          <title id={'terrain-story-title-' + step}>Tres maneras de comparar el relieve</title>
+          <desc id={'terrain-story-desc-' + step}>Un perfil ilustrativo destaca la inclinación típica, los tramos de mayor pendiente y la diferencia de elevación.</desc>
+          <defs>
+            <linearGradient id={'terrain-fill-' + step} x1="0" y1="0" x2="0" y2="1"><stop stopColor="#81e5db" stopOpacity=".2" /><stop offset="1" stopColor="#81e5db" stopOpacity="0" /></linearGradient>
+          </defs>
+          <g className="terrain-grid"><path d="M40 90H560M40 160H560M40 230H560M40 300H560M110 55V355M220 55V355M330 55V355M440 55V355M550 55V355" /></g>
+          <path className="terrain-fill" style={{fill: 'url(#terrain-fill-' + step + ')'}} d="M40 310 110 290 180 240 240 260 305 210 355 100 410 135 475 230 560 190V355H40Z" />
+          <path className="terrain-profile" d="m40 310 70-20 70-50 60 20 65-50 50-110 55 35 65 95 85-40" />
+          <g className="terrain-detail terrain-median" aria-hidden="true">
+            <path className="terrain-highlight" d="m110 290 70-50" />
+            <path className="terrain-guide" d="M110 290H208M158 290Q158 274 150 262" />
+            <circle cx="110" cy="290" r="5" /><text x="72" y="355">INCLINACIÓN TÍPICA</text>
+          </g>
+          <g className="terrain-detail terrain-steep" aria-hidden="true">
+            <path className="terrain-highlight" d="m305 210 50-110" />
+            <path className="terrain-guide" d="M355 100V65H475" />
+            <circle cx="355" cy="100" r="5" /><text x="355" y="48">MAYOR PENDIENTE</text>
+          </g>
+          <g className="terrain-detail terrain-height" aria-hidden="true">
+            <path className="terrain-guide" d="M80 290H520M355 120H520" />
+            <path className="terrain-highlight" d="M510 120V290M500 120H520M500 290H520" />
+            <text x="450" y="109">P95</text><text x="450" y="318">P5</text>
+          </g>
+        </svg>
+        <figcaption>Un mismo relieve. Tres lecturas.<span>Esquema ilustrativo · sin escala</span></figcaption>
+        <div className="terrain-progress" aria-hidden="true"><span /><span /><span /></div>
+      </figure>
+  );
+}
+
 function App() {
   const story = useRef(null);
   useLayoutEffect(() => {
@@ -133,8 +167,8 @@ function App() {
     <span className="lunar-scan-point" aria-hidden="true" />
     <div className="lunar-scan-card">
       <div className="lunar-scan-story">
-        <h2>¿Dónde vivir en la Luna?</h2>
-        <p>Los tubos de lava podrían servir de refugio para futuras bases lunares. En un terreno parecido de California se probó cómo localizarlos con radar.</p>
+        <h2>Un hogar bajo la Luna</h2>
+        <p>Las cuevas volcánicas podrían proteger futuras bases lunares. Explora su análogo en California: allí se ensaya cómo encontrar estos refugios con radar.</p>
       </div>
       <h2 id="lunar-scan-title"><span aria-hidden="true">ⓘ</span> Ficha orbital · Luna</h2>
       <dl>
@@ -178,7 +212,7 @@ function App() {
       </dl>
     </div>
   </aside>
-  <div className="intro"><p className="label">MARTE</p><h2>¿Hubo vida en Marte?</h2><p className="summary">En Atacama, la NASA ensayó cómo perforar un suelo parecido al marciano y buscar señales de vida bajo la superficie.</p><a className="button" href="#suelo-marciano">Descender a Marte <span aria-hidden="true">↓</span></a></div>
+  <div className="intro"><p className="label">MARTE</p><h2>Rumbo a Marte, desde la Tierra</h2><p className="summary">Descubre uno de los tantos lugares análogos que pueden existir en la Tierra para prepararnos de camino a Marte.</p><a className="button" href="#suelo-marciano">Descender a Marte <span aria-hidden="true">↓</span></a></div>
 </section>
 <section id="suelo-marciano" className="surface mars-ground" aria-labelledby="mars-ground-title">
   <div className="landscape" aria-hidden="true" />
@@ -194,29 +228,51 @@ function App() {
 </section>
 <Surface id="atacama">
   <div className="mars-passage-rock" aria-hidden="true" />
+  <p className="surface-transition mars-transition">De Marte a Atacama</p>
   <article className="field"><p className="label">NORTE DE CHILE</p><h2 tabIndex={-1}>Desierto de Atacama</h2><p>El rover de prueba ARADS recogió muestras de suelo hiperárido para buscar señales de vida microbiana.</p><a href="https://www.nasa.gov/universe/atacama-rover-astrobiology-drilling-studies-arads/">Ver los ensayos de ARADS ↗</a></article>
   <div className="atacama-orbit" aria-hidden="true">
     <img src={marsOrbit} alt="" />
   </div>
 </Surface>
-</section>
-<section id="comparar" className="atlas-scene">
   <div className="atlas-intro">
     <h2>¿Dónde ensayar<br />el próximo recorrido?</h2>
     <p>Con el Atlas de AZZU puedes buscar terrenos en la Tierra parecidos al polo sur lunar y elegir candidatos para ensayos de movilidad.</p>
     <AtlasLink />
   </div>
+</section>
+<section id="comparar" className="atlas-scene">
   <figure className="atlas-preview">
     <img src={atlasPreview} width="1366" height="786" loading="lazy" alt="Atlas de AZZU con el mapa de candidatos terrestres y el panel de comparación científica" />
   </figure>
   <div className="atlas-method">
-    <h3>Qué mide el Atlas</h3>
+    <div className="atlas-stack-stage">
+    <p className="label">QUÉ MIDE EL ATLAS</p>
+    <h3>Tres formas de leer un terreno.</h3>
     <p>Usamos datos de elevación de NASA (LOLA) y Copernicus (GLO-30) para comparar sectores de 3 km de lado a una resolución común de 60 m en el Atlas.</p>
-    <dl className="atlas-variables">
-      <div><dt>Pendiente mediana</dt><dd>La inclinación típica del terreno, en grados.</dd></div>
-      <div><dt>Pendiente P90</dt><dd>La inclinación que solo supera el 10 % del terreno.</dd></div>
-      <div><dt>Desnivel P95–P5</dt><dd>La diferencia entre los percentiles 95 y 5 de elevación, en metros.</dd></div>
-    </dl>
+    <div className="atlas-story" data-step="0">
+
+      <div className="atlas-variables">
+        <div className="atlas-story-step" style={{'--card-index': 0}}>
+          <dl className="metric-copy">
+          <dt data-reveal><span className="story-number" aria-hidden="true">01 / 03</span>Pendiente mediana</dt>
+          <dd data-reveal>Primero, la inclinación habitual.<p>La mediana resume la pendiente típica del terreno, en grados. Es el punto de partida para comparar cómo se inclinan dos superficies.</p></dd></dl>
+          <TerrainProfile step="0" />
+        </div>
+        <div className="atlas-story-step" style={{'--card-index': 1}}>
+          <dl className="metric-copy">
+          <dt data-reveal><span className="story-number" aria-hidden="true">02 / 03</span>Pendiente P90</dt>
+          <dd data-reveal>Después, los tramos más exigentes.<p>Esta es la inclinación que solo supera el 10 % del terreno. Permite mirar más allá de la pendiente típica y comparar las zonas más inclinadas.</p></dd></dl>
+          <TerrainProfile step="1" />
+        </div>
+        <div className="atlas-story-step" style={{'--card-index': 2}}>
+          <dl className="metric-copy">
+          <dt data-reveal><span className="story-number" aria-hidden="true">03 / 03</span>Desnivel P95–P5</dt>
+          <dd data-reveal>Por último, cuánto cambia la altura.<p>La diferencia entre los percentiles 95 y 5 de elevación, en metros, describe el contraste de alturas del sector que estamos comparando.</p></dd></dl>
+          <TerrainProfile step="2" />
+        </div>
+      </div>
+    </div>
+    </div>
     <p>En la primera ejecución, SP Crater, en Arizona, quedó entre los percentiles 85 y 98. Las coincidencias de relieve ayudan a priorizar sitios para evaluar en campo.</p>
     <a href="https://github.com/77ALDO77/tsumi_nasa_SA/blob/main/analisis/README.md">Ver método y resultados ↗</a>
   </div>
@@ -226,6 +282,9 @@ function App() {
   <nav id="casos" aria-label="Casos de campo"><a href="#lava">Lava Beds</a><a href="#atacama">Atacama</a></nav>
   <a href="#tierra">Volver a la Tierra ↑</a>
 </footer>
+<a className="back-to-top" href="#tierra" aria-label="Volver al inicio" title="Volver al inicio">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 15 7-7 7 7" /></svg>
+</a>
     </div>
   );
 }
